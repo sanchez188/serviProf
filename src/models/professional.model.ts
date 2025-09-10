@@ -37,4 +37,5 @@ export interface Review {
   comment: string;
   date: Date;
   serviceType: string;
+  name:string;
 }
