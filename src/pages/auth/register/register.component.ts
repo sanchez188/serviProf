@@ -480,10 +480,12 @@ export class RegisterComponent {
     this.errorMessage = '';
     this.authService.loginWithGoogle().subscribe({
       next: () => {
-        // OAuth redirect will handle navigation
+        console.log('Google OAuth initiated');
+        // OAuth redirect will handle navigation automatically
       },
       error: (error) => {
         this.errorMessage = error.message;
+        console.error('Google register error:', error);
       },
     });
   }

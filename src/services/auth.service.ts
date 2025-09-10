@@ -46,6 +46,8 @@ export class AuthService {
 
   private async loadUserProfile(user: SupabaseUser): Promise<void> {
     try {
+      this.isLoadingSignal.set(true);
+      
       const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
@@ -53,8 +55,35 @@ export class AuthService {
         .single();
 
       if (error) {
-        console.error('Error loading profile:', error);
-        return;
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          console.log('Profile not found, creating new profile for user:', user.email);
+          
+          const newProfile = {
+            id: user.id,
+            email: user.email,
+            name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+            user_type: 'client',
+            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture,
+            phone: user.user_metadata?.phone
+          };
+          
+          const { data: createdProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert(newProfile)
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            return;
+          }
+          
+          profile = createdProfile;
+        } else {
+          console.error('Error loading profile:', error);
+          return;
+        }
       }
 
       if (profile) {

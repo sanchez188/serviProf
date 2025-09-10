@@ -295,6 +295,18 @@ export class HeaderComponent {
   isMenuOpen = false;
   isUserMenuOpen = false;
 
+  constructor() {
+    // Subscribe to auth changes to update UI
+    this.authService.session$.subscribe(session => {
+      // Force change detection when auth state changes
+      if (session) {
+        console.log('User logged in:', this.authService.currentUser()?.name);
+      } else {
+        console.log('User logged out');
+      }
+    });
+  }
+
   toggleMenu(): void {
     this.isMenuOpen = !this.isMenuOpen;
   }
