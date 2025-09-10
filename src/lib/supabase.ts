@@ -4,18 +4,26 @@ import { environment } from '../environments/environment';
 const supabaseUrl = environment.supabaseUrl;
 const supabaseAnonKey = environment.supabaseAnonKey;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Supabase environment variables not configured. Please click "Connect to Supabase" button to configure your project.');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: true,
-    detectSessionInUrl: false,
-    flowType: 'pkce'
+// Create a dummy client if credentials are not configured
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+      flowType: 'pkce'
+    }
   }
-});
+);
+
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && 
+    supabaseUrl !== '' && supabaseAnonKey !== '' &&
+    !supabaseUrl.includes('placeholder') && !supabaseAnonKey.includes('placeholder'));
+};
 
 export type Database = {
   public: {
