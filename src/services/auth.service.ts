@@ -54,6 +54,8 @@ export class AuthService {
         .eq('id', user.id)
         .single();
 
+      let profileData = profile;
+
       if (error) {
         // If profile doesn't exist, create it
         if (error.code === 'PGRST116') {
@@ -62,10 +64,10 @@ export class AuthService {
           const newProfile = {
             id: user.id,
             email: user.email,
-            name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Usuario',
+            name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
             user_type: 'client',
-            avatar: user.user_metadata?.avatar_url || user.user_metadata?.picture,
-            phone: user.user_metadata?.phone
+            avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'],
+            phone: user.user_metadata?.['phone']
           };
           
           const { data: createdProfile, error: createError } = await supabase
@@ -79,23 +81,23 @@ export class AuthService {
             return;
           }
           
-          profile = createdProfile;
+          profileData = createdProfile;
         } else {
           console.error('Error loading profile:', error);
           return;
         }
       }
 
-      if (profile) {
+      if (profileData) {
         const userProfile: User = {
-          id: profile.id,
-          email: profile.email || user.email || '',
-          name: profile.name || '',
-          userType: (profile.user_type as UserType) || UserType.CLIENT,
-          phone: profile.phone || undefined,
-          address: profile.address || undefined,
-          avatar: profile.avatar || undefined,
-          createdAt: new Date(profile.created_at || user.created_at)
+          id: profileData.id,
+          email: profileData.email || user.email || '',
+          name: profileData.name || '',
+          userType: (profileData.user_type as UserType) || UserType.CLIENT,
+          phone: profileData.phone || undefined,
+          address: profileData.address || undefined,
+          avatar: profileData.avatar || undefined,
+          createdAt: new Date(profileData.created_at || user.created_at)
         };
 
         // Load professional profile if user is professional
