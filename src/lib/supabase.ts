@@ -63,6 +63,7 @@ export type Database = {
           rating: number | null;
           review_count: number | null;
           completed_jobs: number | null;
+          created_at: string | null;
         };
         Insert: {
           id: string;
@@ -76,6 +77,7 @@ export type Database = {
           rating?: number | null;
           review_count?: number | null;
           completed_jobs?: number | null;
+          created_at?: string | null;
         };
         Update: {
           id?: string;
@@ -89,6 +91,7 @@ export type Database = {
           rating?: number | null;
           review_count?: number | null;
           completed_jobs?: number | null;
+          created_at?: string | null;
         };
       };
       categories: {
@@ -97,18 +100,50 @@ export type Database = {
           name: string;
           icon: string | null;
           color: string | null;
+          created_at: string | null;
         };
         Insert: {
           id?: string;
           name: string;
           icon?: string | null;
           color?: string | null;
+          created_at?: string | null;
         };
         Update: {
           id?: string;
           name?: string;
           icon?: string | null;
           color?: string | null;
+          created_at?: string | null;
+        };
+      };
+      availability: {
+        Row: {
+          id: string;
+          professional_id: string | null;
+          day_of_week: number | null;
+          start_time: string;
+          end_time: string;
+          is_available: boolean | null;
+          created_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          professional_id?: string | null;
+          day_of_week?: number | null;
+          start_time: string;
+          end_time: string;
+          is_available?: boolean | null;
+          created_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          professional_id?: string | null;
+          day_of_week?: number | null;
+          start_time?: string;
+          end_time?: string;
+          is_available?: boolean | null;
+          created_at?: string | null;
         };
       };
       bookings: {
