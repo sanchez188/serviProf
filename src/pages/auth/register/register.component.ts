@@ -485,7 +485,6 @@ export class RegisterComponent {
       },
       error: (error) => {
         this.errorMessage = error.message;
-        console.error('Google register error:', error);
       },
     });
   }

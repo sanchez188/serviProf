@@ -358,7 +358,6 @@ export class LoginComponent {
       },
       error: (error) => {
         this.errorMessage = error.message;
-        console.error('Google login error:', error);
       },
     });
   }

@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, from, throwError, BehaviorSubject, of } from 'rxjs';
 import { map, catchError, tap, switchMap } from 'rxjs/operators';
-import { supabase } from '../lib/supabase';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { User, LoginCredentials, RegisterData, UserType } from '../models/user.model';
 import { AuthError, User as SupabaseUser, Session } from '@supabase/supabase-js';
 
@@ -19,7 +19,11 @@ export class AuthService {
   session$ = this.sessionSubject.asObservable();
 
   constructor() {
-    this.initializeAuth();
+    if (isSupabaseConfigured()) {
+      this.initializeAuth();
+    } else {
+      console.warn('Supabase not configured - authentication disabled');
+    }
   }
 
   private async initializeAuth() {
@@ -141,6 +145,10 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<User> {
+    if (!isSupabaseConfigured()) {
+      return throwError(() => new Error('Supabase no está configurado. Por favor configura tu proyecto primero.'));
+    }
+    
     this.isLoadingSignal.set(true);
     
     return from(
@@ -169,6 +177,10 @@ export class AuthService {
   }
 
   loginWithGoogle(): Observable<void> {
+    if (!isSupabaseConfigured()) {
+      return throwError(() => new Error('Supabase no está configurado. Por favor configura tu proyecto primero.'));
+    }
+    
     this.isLoadingSignal.set(true);
     
     return from(
@@ -193,6 +205,10 @@ export class AuthService {
   }
 
   register(data: RegisterData): Observable<User> {
+    if (!isSupabaseConfigured()) {
+      return throwError(() => new Error('Supabase no está configurado. Por favor configura tu proyecto primero.'));
+    }
+    
     this.isLoadingSignal.set(true);
     
     return from(
