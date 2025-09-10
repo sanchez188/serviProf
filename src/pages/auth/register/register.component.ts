@@ -1,0 +1,413 @@
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
+import { LoadingSpinnerComponent } from '../../../components/loading-spinner/loading-spinner.component';
+import { UserType } from '../../../models/user.model';
+
+@Component({
+  selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule, LoadingSpinnerComponent],
+  template: `
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <h1>Crear Cuenta</h1>
+          <p>Únete a ServiPro y encuentra profesionales de confianza</p>
+        </div>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+          <div class="form-group">
+            <label>Tipo de cuenta</label>
+            <div class="user-type-selector">
+              <label class="user-type-option">
+                <input
+                  type="radio"
+                  formControlName="userType"
+                  [value]="UserType.CLIENT"
+                >
+                <div class="option-content">
+                  <div class="option-icon">👤</div>
+                  <div class="option-text">
+                    <strong>Cliente</strong>
+                    <span>Busco contratar servicios</span>
+                  </div>
+                </div>
+              </label>
+              <label class="user-type-option">
+                <input
+                  type="radio"
+                  formControlName="userType"
+                  [value]="UserType.PROFESSIONAL"
+                >
+                <div class="option-content">
+                  <div class="option-icon">🔧</div>
+                  <div class="option-text">
+                    <strong>Profesional</strong>
+                    <span>Ofrezco mis servicios</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            @if (registerForm.get('userType')?.invalid && registerForm.get('userType')?.touched) {
+              <div class="error-message">
+                Selecciona el tipo de cuenta
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="name">Nombre Completo</label>
+            <input
+              type="text"
+              id="name"
+              formControlName="name"
+              class="form-control"
+              [class.error]="registerForm.get('name')?.invalid && registerForm.get('name')?.touched"
+              placeholder="Tu nombre completo"
+            >
+            @if (registerForm.get('name')?.invalid && registerForm.get('name')?.touched) {
+              <div class="error-message">
+                El nombre es requerido
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              formControlName="email"
+              class="form-control"
+              [class.error]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched"
+              placeholder="tu@email.com"
+            >
+            @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+              <div class="error-message">
+                @if (registerForm.get('email')?.errors?.['required']) {
+                  El email es requerido
+                }
+                @if (registerForm.get('email')?.errors?.['email']) {
+                  Ingresa un email válido
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Teléfono (Opcional)</label>
+            <input
+              type="tel"
+              id="phone"
+              formControlName="phone"
+              class="form-control"
+              placeholder="+52 123 456 7890"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="password">Contraseña</label>
+            <input
+              type="password"
+              id="password"
+              formControlName="password"
+              class="form-control"
+              [class.error]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched"
+              placeholder="Mínimo 6 caracteres"
+            >
+            @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+              <div class="error-message">
+                @if (registerForm.get('password')?.errors?.['required']) {
+                  La contraseña es requerida
+                }
+                @if (registerForm.get('password')?.errors?.['minlength']) {
+                  La contraseña debe tener al menos 6 caracteres
+                }
+              </div>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword">Confirmar Contraseña</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              formControlName="confirmPassword"
+              class="form-control"
+              [class.error]="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched"
+              placeholder="Repite tu contraseña"
+            >
+            @if (registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched) {
+              <div class="error-message">
+                @if (registerForm.get('confirmPassword')?.errors?.['required']) {
+                  Confirma tu contraseña
+                }
+                @if (registerForm.errors?.['passwordMismatch']) {
+                  Las contraseñas no coinciden
+                }
+              </div>
+            }
+          </div>
+
+          @if (errorMessage) {
+            <div class="alert alert-error">
+              {{ errorMessage }}
+            </div>
+          }
+
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-full"
+            [disabled]="registerForm.invalid || authService.isLoading()"
+          >
+            @if (authService.isLoading()) {
+              <app-loading-spinner></app-loading-spinner>
+            } @else {
+              Crear Cuenta
+            }
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión aquí</a></p>
+        </div>
+      </div>
+    </div>
+  `,
+  styles: [`
+    .auth-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 1rem;
+    }
+
+    .auth-card {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .auth-header h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 0.5rem;
+    }
+
+    .auth-header p {
+      color: #6b7280;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .form-control {
+      padding: 0.75rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+
+    .form-control.error {
+      border-color: #ef4444;
+    }
+
+    .error-message {
+      color: #ef4444;
+      font-size: 0.875rem;
+    }
+
+    .alert {
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2563eb;
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .btn-full {
+      width: 100%;
+    }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .auth-footer a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+
+    .user-type-selector {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .user-type-option {
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .user-type-option input[type="radio"] {
+      display: none;
+    }
+
+    .option-content {
+      padding: 1rem;
+      border: 2px solid #e5e7eb;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      transition: all 0.2s ease;
+    }
+
+    .user-type-option input[type="radio"]:checked + .option-content {
+      border-color: #3b82f6;
+      background: #eff6ff;
+    }
+
+    .option-content:hover {
+      border-color: #3b82f6;
+    }
+
+    .option-icon {
+      font-size: 1.5rem;
+    }
+
+    .option-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .option-text strong {
+      color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .option-text span {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+  `]
+})
+export class RegisterComponent {
+  private fb = inject(FormBuilder);
+  private router = inject(Router);
+  authService = inject(AuthService);
+
+  registerForm: FormGroup;
+  errorMessage = '';
+  UserType = UserType;
+
+  constructor() {
+    this.registerForm = this.fb.group({
+      userType: ['', Validators.required],
+      name: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      phone: [''],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  passwordMatchValidator(form: FormGroup) {
+    const password = form.get('password');
+    const confirmPassword = form.get('confirmPassword');
+    
+    if (password && confirmPassword && password.value !== confirmPassword.value) {
+      return { passwordMismatch: true };
+    }
+    return null;
+  }
+
+  onSubmit(): void {
+    if (this.registerForm.valid) {
+      this.errorMessage = '';
+      const { confirmPassword, ...registerData } = this.registerForm.value;
+      
+      this.authService.register(registerData).subscribe({
+        next: () => {
+          this.router.navigate(['/professionals']);
+        },
+        error: (error) => {
+          this.errorMessage = error.message;
+        }
+      });
+    }
+  }
+}
