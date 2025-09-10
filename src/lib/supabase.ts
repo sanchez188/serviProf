@@ -45,7 +45,8 @@ export const supabase = isSupabaseConfigured() ? createClient(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      flowType: 'pkce'
+      flowType: 'pkce',
+      debug: true
     },
     global: {
       headers: {

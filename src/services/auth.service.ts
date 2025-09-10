@@ -167,6 +167,7 @@ export class AuthService {
       return throwError(() => new Error('Supabase no está configurado. Por favor configura tu proyecto primero.'));
     }
     
+    console.log('🔐 Intentando login con:', credentials.email);
     this.isLoadingSignal.set(true);
     
     return from(
@@ -182,6 +183,7 @@ export class AuthService {
         if (!data.user) {
           throw new Error('No user returned from login');
         }
+        console.log('✅ Login exitoso:', data.user.email);
         return from(this.loadUserProfile(data.user)).pipe(
           map(() => this.currentUserSignal()!)
         );
@@ -189,6 +191,7 @@ export class AuthService {
       tap(() => this.isLoadingSignal.set(false)),
       catchError((error: AuthError) => {
         this.isLoadingSignal.set(false);
+        console.error('❌ Error en login:', error);
         return throwError(() => new Error(this.getErrorMessage(error)));
       })
     );
@@ -205,7 +208,11 @@ export class AuthService {
       supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/professionals`
+          redirectTo: `${window.location.origin}/professionals`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          }
         }
       })
     ).pipe(
@@ -213,10 +220,12 @@ export class AuthService {
         if (error) {
           throw error;
         }
+        console.log('🔗 Google OAuth iniciado correctamente');
       }),
       tap(() => this.isLoadingSignal.set(false)),
       catchError((error: AuthError) => {
         this.isLoadingSignal.set(false);
+        console.error('❌ Error en Google OAuth:', error);
         return throwError(() => new Error(this.getErrorMessage(error)));
       })
     );
@@ -234,6 +243,7 @@ export class AuthService {
         email: data.email,
         password: data.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/professionals`,
           data: {
             full_name: data.name,
             user_type: data.userType,
@@ -250,19 +260,24 @@ export class AuthService {
           throw new Error('No user returned from registration');
         }
         
+        console.log('📝 Usuario registrado:', authData.user.email);
+        
         // If user is immediately confirmed, load profile
         if (authData.session) {
+          console.log('✅ Usuario confirmado automáticamente');
           return from(this.loadUserProfile(authData.user)).pipe(
             map(() => this.currentUserSignal()!)
           );
         } else {
           // User needs to confirm email
+          console.log('📧 Se requiere confirmación de email');
           throw new Error('Por favor verifica tu email antes de continuar');
         }
       }),
       tap(() => this.isLoadingSignal.set(false)),
       catchError((error: AuthError) => {
         this.isLoadingSignal.set(false);
+        console.error('❌ Error en registro:', error);
         return throwError(() => new Error(this.getErrorMessage(error)));
       })
     );
@@ -350,6 +365,7 @@ export class AuthService {
   }
 
   private getErrorMessage(error: AuthError): string {
+    console.log('🔍 Error details:', error);
     switch (error.message) {
       case 'Invalid login credentials':
         return 'Credenciales inválidas';
@@ -357,6 +373,10 @@ export class AuthService {
         return 'Por favor verifica tu email';
       case 'User already registered':
         return 'El email ya está registrado';
+      case 'Invalid API key':
+        return 'Clave de API inválida - verifica tu configuración de Supabase';
+      case 'Database connection failed':
+        return 'Error de conexión a la base de datos';
       default:
         return error.message || 'Error de autenticación';
     }
