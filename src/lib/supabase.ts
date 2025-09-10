@@ -1,8 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { environment } from '../environments/environment';
 
-const supabaseUrl = environment.supabaseUrl;
-const supabaseAnonKey = environment.supabaseAnonKey;
+
+const supabaseUrl = "https://xahcororbsrntzcqyrvi.supabase.co"; //import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhaGNvcm9yYnNybnR6Y3F5cnZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc1MjIzNTcsImV4cCI6MjA3MzA5ODM1N30.eKQta47-dKIHEeHZJ985O6g2dbKg_r7gO1QSlGOQYis"; //import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn('Supabase environment variables not set. Please connect to Supabase.');
