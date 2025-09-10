@@ -4,16 +4,15 @@ import { environment } from '../environments/environment';
 const supabaseUrl = environment.supabaseUrl;
 const supabaseAnonKey = environment.supabaseAnonKey;
 
-
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase environment variables not set. Please connect to Supabase.');
+  throw new Error('Supabase environment variables not configured. Please click "Connect to Supabase" button to configure your project.');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
+    persistSession: false,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
+    detectSessionInUrl: false,
     flowType: 'pkce'
   }
 });
