@@ -1,12 +1,9 @@
 import { Injectable, signal } from '@angular/core';
-import { Observable, of, delay, tap, throwError, switchMap } from 'rxjs';
-import {
-  Booking,
-  BookingRequest,
-  BookingStatus,
-} from '../models/booking.model';
+import { Observable, from, throwError } from 'rxjs';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
+import { supabase } from '../lib/supabase';
+import { Booking, BookingRequest, BookingStatus } from '../models/booking.model';
 import { AuthService } from './auth.service';
-import { ProfessionalsService } from './professionals.service';
 
 @Injectable({
   providedIn: 'root',
@@ -18,91 +15,7 @@ export class BookingsService {
   bookings = this.bookingsSignal.asReadonly();
   isLoading = this.isLoadingSignal.asReadonly();
 
-  private mockBookings: Booking[] = [
-    {
-      id: '1',
-      userId: '1',
-      professionalId: '1',
-      client: {
-        name: 'Usuario de Prueba',
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        phone: '+1234567890'
-      },
-      professional: {
-        name: 'Carlos Rodríguez',
-        avatar:
-          'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        category: 'Plomería',
-      },
-      date: new Date('2024-01-25'),
-      startTime: '10:00',
-      endTime: '12:00',
-      hours: 2,
-      totalPrice: 50,
-      status: BookingStatus.ACCEPTED,
-      description: 'Reparación de tubería en cocina',
-      createdAt: new Date('2024-01-20'),
-      acceptedAt: new Date('2024-01-21'),
-    },
-    {
-      id: '2',
-      userId: '1',
-      professionalId: '3',
-      client: {
-        name: 'Usuario de Prueba',
-        avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        phone: '+1234567890'
-      },
-      professional: {
-        name: 'Luis Hernández',
-        avatar:
-          'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        category: 'Jardinería',
-      },
-      date: new Date('2024-01-15'),
-      startTime: '08:00',
-      endTime: '12:00',
-      hours: 4,
-      totalPrice: 80,
-      status: BookingStatus.COMPLETED,
-      description: 'Mantenimiento de jardín trasero',
-      createdAt: new Date('2024-01-10'),
-      completedAt: new Date('2024-01-15'),
-      review: {
-        rating: 5,
-        comment: 'Excelente trabajo, muy profesional',
-        date: new Date('2024-01-15'),
-      },
-    },
-    {
-      id: '3',
-      userId: '3',
-      professionalId: '2',
-      client: {
-        name: 'María González',
-        avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        phone: '+1234567892'
-      },
-      professional: {
-        name: 'Carlos Rodríguez',
-        avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
-        category: 'Plomería',
-      },
-      date: new Date('2024-01-28'),
-      startTime: '14:00',
-      endTime: '16:00',
-      hours: 2,
-      totalPrice: 50,
-      status: BookingStatus.PENDING,
-      description: 'Instalación de lavabo nuevo',
-      createdAt: new Date('2024-01-26'),
-    },
-  ];
-
-  constructor(
-    private authService: AuthService,
-    private professionalsService: ProfessionalsService
-  ) {
+  constructor(private authService: AuthService) {
     this.loadUserBookings();
   }
 
@@ -114,51 +27,71 @@ export class BookingsService {
       return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    return this.professionalsService
-      .getProfessionalById(request.professionalId)
-      .pipe(
-        delay(1000),
-        // Use switchMap to transform the professional into a Booking observable
-        switchMap((professional) => {
-          if (!professional) {
-            return throwError(() => new Error('Profesional no encontrado'));
-          }
+    const endTime = this.calculateEndTime(request.startTime, request.hours);
 
-          const endTime = this.calculateEndTime(
-            request.startTime,
-            request.hours
-          );
-          const newBooking: Booking = {
-            id: Date.now().toString(),
-            userId: currentUser.id,
-            professionalId: request.professionalId,
-            client: {
-              name: currentUser.name,
-              avatar: currentUser.avatar ?? '',
-              phone: currentUser.phone
-            },
-            professional: {
-              name: professional.name,
-              avatar: professional.avatar,
-              category: professional.category.name,
-            },
-            date: request.date,
-            startTime: request.startTime,
-            endTime,
-            hours: request.hours,
-            totalPrice: professional.hourlyRate * request.hours,
-            status: BookingStatus.CONFIRMED,
-            description: request.description,
-            createdAt: new Date(),
-          };
+    return from(
+      supabase
+        .from('professionals')
+        .select('hourly_rate')
+        .eq('id', request.professionalId)
+        .single()
+    ).pipe(
+      switchMap(({ data: professional, error }) => {
+        if (error || !professional) {
+          throw new Error('Profesional no encontrado');
+        }
 
-          this.mockBookings.push(newBooking);
-          this.loadUserBookings();
-          this.isLoadingSignal.set(false);
+        const totalPrice = professional.hourly_rate * request.hours;
 
-          return of(newBooking);
-        })
-      );
+        return from(
+          supabase
+            .from('bookings')
+            .insert({
+              user_id: currentUser.id,
+              professional_id: request.professionalId,
+              date: request.date.toISOString().split('T')[0],
+              start_time: request.startTime,
+              end_time: endTime,
+              hours: request.hours,
+              total_price: totalPrice,
+              status: 'pending',
+              description: request.description
+            })
+            .select(`
+              *,
+              profiles!bookings_user_id_fkey (
+                name,
+                avatar,
+                phone
+              ),
+              professional:profiles!bookings_professional_id_fkey (
+                name,
+                avatar
+              ),
+              professionals (
+                categories (
+                  name
+                )
+              )
+            `)
+            .single()
+        );
+      }),
+      map(({ data, error }) => {
+        if (error) {
+          throw error;
+        }
+        return this.mapToBooking(data);
+      }),
+      tap(() => {
+        this.loadUserBookings();
+        this.isLoadingSignal.set(false);
+      }),
+      catchError((error) => {
+        this.isLoadingSignal.set(false);
+        return throwError(() => new Error(error.message || 'Error creating booking'));
+      })
+    );
   }
 
   getUserBookings(): Observable<Booking[]> {
@@ -166,65 +99,184 @@ export class BookingsService {
     const currentUser = this.authService.currentUser();
 
     if (!currentUser) {
-      return of([]);
+      return from([]);
     }
 
-    const userBookings = this.mockBookings.filter(
-      (b) => b.userId === currentUser.id
-    );
-
-    return of(userBookings).pipe(
-      delay(500),
+    return from(
+      supabase
+        .from('bookings')
+        .select(`
+          *,
+          client:profiles!bookings_user_id_fkey (
+            name,
+            avatar,
+            phone
+          ),
+          professional:profiles!bookings_professional_id_fkey (
+            name,
+            avatar
+          ),
+          professionals (
+            categories (
+              name
+            )
+          ),
+          reviews (
+            rating,
+            comment,
+            created_at
+          )
+        `)
+        .eq('user_id', currentUser.id)
+        .order('created_at', { ascending: false })
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) {
+          throw error;
+        }
+        return (data || []).map(booking => this.mapToBooking(booking));
+      }),
       tap((bookings) => {
         this.bookingsSignal.set(bookings);
         this.isLoadingSignal.set(false);
+      }),
+      catchError((error) => {
+        this.isLoadingSignal.set(false);
+        return throwError(() => new Error(error.message || 'Error loading bookings'));
       })
     );
   }
 
   completeBooking(bookingId: string): Observable<Booking> {
     this.isLoadingSignal.set(true);
-    const booking = this.mockBookings.find((b) => b.id === bookingId);
-
-    if (!booking) {
-      return throwError(() => new Error('Reserva no encontrada'));
-    }
-
-    booking.status = BookingStatus.COMPLETED;
-    booking.completedAt = new Date();
-
-    return of(booking).pipe(
-      delay(500),
+    
+    return from(
+      supabase
+        .from('bookings')
+        .update({
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('id', bookingId)
+        .select(`
+          *,
+          client:profiles!bookings_user_id_fkey (
+            name,
+            avatar,
+            phone
+          ),
+          professional:profiles!bookings_professional_id_fkey (
+            name,
+            avatar
+          ),
+          professionals (
+            categories (
+              name
+            )
+          )
+        `)
+        .single()
+    ).pipe(
+      map(({ data, error }) => {
+        if (error) {
+          throw error;
+        }
+        return this.mapToBooking(data);
+      }),
       tap(() => {
         this.loadUserBookings();
         this.isLoadingSignal.set(false);
+      }),
+      catchError((error) => {
+        this.isLoadingSignal.set(false);
+        return throwError(() => new Error(error.message || 'Error completing booking'));
       })
     );
   }
 
-  addReview(
-    bookingId: string,
-    rating: number,
-    comment: string
-  ): Observable<Booking> {
+  addReview(bookingId: string, rating: number, comment: string): Observable<Booking> {
     this.isLoadingSignal.set(true);
-    const booking = this.mockBookings.find((b) => b.id === bookingId);
+    const currentUser = this.authService.currentUser();
 
-    if (!booking) {
-      return throwError(() => new Error('Reserva no encontrada'));
+    if (!currentUser) {
+      return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    booking.review = {
-      rating,
-      comment,
-      date: new Date(),
-    };
+    return from(
+      supabase
+        .from('bookings')
+        .select('professional_id')
+        .eq('id', bookingId)
+        .single()
+    ).pipe(
+      switchMap(({ data: booking, error }) => {
+        if (error || !booking) {
+          throw new Error('Booking not found');
+        }
 
-    return of(booking).pipe(
-      delay(500),
+        return from(
+          supabase
+            .from('reviews')
+            .insert({
+              booking_id: bookingId,
+              user_id: currentUser.id,
+              professional_id: booking.professional_id,
+              rating,
+              comment,
+              service_type: 'Servicio'
+            })
+            .select()
+            .single()
+        );
+      }),
+      switchMap(({ data: review, error }) => {
+        if (error) {
+          throw error;
+        }
+
+        return from(
+          supabase
+            .from('bookings')
+            .update({ review_id: review.id })
+            .eq('id', bookingId)
+            .select(`
+              *,
+              client:profiles!bookings_user_id_fkey (
+                name,
+                avatar,
+                phone
+              ),
+              professional:profiles!bookings_professional_id_fkey (
+                name,
+                avatar
+              ),
+              professionals (
+                categories (
+                  name
+                )
+              ),
+              reviews (
+                rating,
+                comment,
+                created_at
+              )
+            `)
+            .single()
+        );
+      }),
+      map(({ data, error }) => {
+        if (error) {
+          throw error;
+        }
+        return this.mapToBooking(data);
+      }),
       tap(() => {
         this.loadUserBookings();
         this.isLoadingSignal.set(false);
+      }),
+      catchError((error) => {
+        this.isLoadingSignal.set(false);
+        return throwError(() => new Error(error.message || 'Error adding review'));
       })
     );
   }
@@ -232,10 +284,7 @@ export class BookingsService {
   private loadUserBookings(): void {
     const currentUser = this.authService.currentUser();
     if (currentUser) {
-      const userBookings = this.mockBookings.filter(
-        (b) => b.userId === currentUser.id
-      );
-      this.bookingsSignal.set(userBookings);
+      this.getUserBookings().subscribe();
     }
   }
 
@@ -250,5 +299,40 @@ export class BookingsService {
       .getMinutes()
       .toString()
       .padStart(2, '0')}`;
+  }
+
+  private mapToBooking(data: any): Booking {
+    return {
+      id: data.id,
+      userId: data.user_id,
+      professionalId: data.professional_id,
+      client: {
+        name: data.client?.name || 'Cliente',
+        avatar: data.client?.avatar || '',
+        phone: data.client?.phone
+      },
+      professional: {
+        name: data.professional?.name || 'Profesional',
+        avatar: data.professional?.avatar || '',
+        category: data.professionals?.categories?.name || 'Servicio'
+      },
+      date: new Date(data.date),
+      startTime: data.start_time,
+      endTime: data.end_time,
+      hours: data.hours,
+      totalPrice: data.total_price,
+      status: data.status as BookingStatus,
+      description: data.description,
+      createdAt: new Date(data.created_at),
+      completedAt: data.completed_at ? new Date(data.completed_at) : undefined,
+      acceptedAt: data.accepted_at ? new Date(data.accepted_at) : undefined,
+      rejectedAt: data.rejected_at ? new Date(data.rejected_at) : undefined,
+      rejectionReason: data.rejection_reason,
+      review: data.reviews ? {
+        rating: data.reviews.rating,
+        comment: data.reviews.comment,
+        date: new Date(data.reviews.created_at)
+      } : undefined
+    };
   }
 }
