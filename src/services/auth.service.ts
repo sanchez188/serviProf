@@ -106,6 +106,7 @@ export class AuthService {
       email: data.email,
       password: data.password,
       name: data.name,
+      userType: UserType.CLIENT, // or assign based on your logic
       phone: data.phone,
       createdAt: new Date(),
       avatar: `https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1`

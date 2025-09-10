@@ -132,6 +132,11 @@ export class BookingsService {
             id: Date.now().toString(),
             userId: currentUser.id,
             professionalId: request.professionalId,
+            client: {
+              name: currentUser.name,
+              avatar: currentUser.avatar ?? '',
+              phone: currentUser.phone
+            },
             professional: {
               name: professional.name,
               avatar: professional.avatar,

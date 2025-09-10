@@ -662,14 +662,14 @@ import { FormsModule } from '@angular/forms';
 export class MyServicesComponent implements OnInit {
   bookingsService = inject(BookingsService);
 
-  activeTab: 'active' | 'completed' = 'active';
+  activeTab: "active" | "completed" = "active";
   bookings = signal<Booking[]>([]);
 
   // Review modal
   showReviewModal = false;
   selectedBooking: Booking | null = null;
   reviewRating = 0;
-  reviewComment = '';
+  reviewComment = "";
 
   // Enum reference for template
   BookingStatus = BookingStatus;
@@ -684,7 +684,7 @@ export class MyServicesComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: 'active' | 'completed'): void {
+  setActiveTab(tab: "active" | "completed"): void {
     this.activeTab = tab;
   }
 
@@ -701,21 +701,21 @@ export class MyServicesComponent implements OnInit {
   }
 
   getStatusText(status: BookingStatus): string {
-    const statusMap = {
-      [BookingStatus.PENDING]: 'Pendiente',
-      [BookingStatus.CONFIRMED]: 'Confirmado',
-      [BookingStatus.IN_PROGRESS]: 'En Progreso',
-      [BookingStatus.COMPLETED]: 'Completado',
-      [BookingStatus.CANCELLED]: 'Cancelado',
+    const statusMap: Record<string, string> = {
+      [BookingStatus.PENDING]: "Pendiente",
+      [BookingStatus.CONFIRMED]: "Confirmado",
+      [BookingStatus.IN_PROGRESS]: "En Progreso",
+      [BookingStatus.COMPLETED]: "Completado",
+      [BookingStatus.CANCELLED]: "Cancelado",
     };
-    return statusMap[status];
+    return statusMap[status as string] ?? status;
   }
 
   formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    return new Intl.DateTimeFormat("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     }).format(new Date(date));
   }
 
@@ -729,7 +729,7 @@ export class MyServicesComponent implements OnInit {
         }, 500);
       },
       error: (error) => {
-        console.error('Error completing service:', error);
+        console.error("Error completing service:", error);
       },
     });
   }
@@ -737,7 +737,7 @@ export class MyServicesComponent implements OnInit {
   openReviewModal(booking: Booking): void {
     this.selectedBooking = booking;
     this.reviewRating = 0;
-    this.reviewComment = '';
+    this.reviewComment = "";
     this.showReviewModal = true;
   }
 
@@ -745,7 +745,7 @@ export class MyServicesComponent implements OnInit {
     this.showReviewModal = false;
     this.selectedBooking = null;
     this.reviewRating = 0;
-    this.reviewComment = '';
+    this.reviewComment = "";
   }
 
   onRatingChange(rating: number): void {
@@ -766,7 +766,7 @@ export class MyServicesComponent implements OnInit {
             this.closeReviewModal();
           },
           error: (error) => {
-            console.error('Error submitting review:', error);
+            console.error("Error submitting review:", error);
           },
         });
     }
