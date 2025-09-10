@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { UserType } from '../../models/user.model';
+import { isSupabaseConfigured } from '../../lib/supabase';
 
 @Component({
   selector: 'app-header',
@@ -16,6 +17,11 @@ import { UserType } from '../../models/user.model';
             <span class="logo-icon">🔧</span>
             <span class="logo-text">ServiPro</span>
           </a>
+          @if (!isSupabaseConfigured()) {
+            <div class="config-warning">
+              ⚠️ Supabase no configurado
+            </div>
+          }
         </div>
 
         <nav class="nav-menu" [class.active]="isMenuOpen">
@@ -105,6 +111,15 @@ import { UserType } from '../../models/user.model';
 
     .logo-icon {
       font-size: 2rem;
+    }
+
+    .config-warning {
+      background: #fef3c7;
+      color: #92400e;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      margin-left: 1rem;
     }
 
     .nav-menu {
@@ -294,6 +309,7 @@ export class HeaderComponent {
   UserType = UserType;
   isMenuOpen = false;
   isUserMenuOpen = false;
+  isSupabaseConfigured = isSupabaseConfigured;
 
   constructor() {
     // Subscribe to auth changes to update UI

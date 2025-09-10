@@ -19,10 +19,28 @@ export class AuthService {
   session$ = this.sessionSubject.asObservable();
 
   constructor() {
-    if (isSupabaseConfigured()) {
+    this.checkSupabaseConnection();
+  }
+
+  private async checkSupabaseConnection() {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase not configured - authentication disabled');
+      return;
+    }
+
+    // Test connection
+    const { testSupabaseConnection } = await import('../lib/supabase');
+    const connectionTest = await testSupabaseConnection();
+    
+    if (connectionTest.success) {
+      console.log('✅ Supabase connection successful');
       this.initializeAuth();
     } else {
-      console.warn('Supabase not configured - authentication disabled');
+      console.error('❌ Supabase connection failed:', connectionTest.error);
+      console.error('Please check:');
+      console.error('1. Your Supabase project is active');
+      console.error('2. The URL and API key are correct');
+      console.error('3. CORS is configured for localhost:4200');
     }
   }
 

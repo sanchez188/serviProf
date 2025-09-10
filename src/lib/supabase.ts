@@ -4,8 +4,40 @@ import { environment } from '../environments/environment';
 const supabaseUrl = environment.supabaseUrl;
 const supabaseAnonKey = environment.supabaseAnonKey;
 
+// Helper function to check if Supabase is properly configured
+export const isSupabaseConfigured = () => {
+  return !!(supabaseUrl && supabaseAnonKey && 
+    supabaseUrl !== '' && supabaseAnonKey !== '' &&
+    supabaseUrl.includes('supabase.co'));
+};
+
+// Test connection function
+export const testSupabaseConnection = async () => {
+  if (!isSupabaseConfigured()) {
+    return { success: false, error: 'Supabase not configured' };
+  }
+  
+  try {
+    const response = await fetch(`${supabaseUrl}/rest/v1/`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`
+      }
+    });
+    
+    if (response.ok) {
+      return { success: true };
+    } else {
+      return { success: false, error: `HTTP ${response.status}: ${response.statusText}` };
+    }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Connection failed' };
+  }
+};
+
 // Create Supabase client
-export const supabase = createClient(
+export const supabase = isSupabaseConfigured() ? createClient(
   supabaseUrl,
   supabaseAnonKey,
   {
@@ -14,15 +46,14 @@ export const supabase = createClient(
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce'
+    },
+    global: {
+      headers: {
+        'X-Client-Info': 'serviprof-app'
+      }
     }
   }
-);
-
-// Helper function to check if Supabase is properly configured
-export const isSupabaseConfigured = () => {
-  return !!(supabaseUrl && supabaseAnonKey);
-};
-
+) : createClient('https://placeholder.supabase.co', 'placeholder-key');
 export type Database = {
   public: {
     Tables: {
