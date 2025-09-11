@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
-import { map, catchError, tap } from 'rxjs/operators';
+import { map, catchError, tap, switchMap } from 'rxjs/operators';
 import { supabase } from '../lib/supabase';
 import type { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { 
@@ -84,7 +84,7 @@ export class AvailabilityService {
         return true;
       }),
       // Luego insertar nueva disponibilidad
-      map(() => {
+      switchMap(() => {
         const newAvailability = availability.map(avail => ({
           user_id: currentUser.id,
           day_of_week: avail.dayOfWeek,
