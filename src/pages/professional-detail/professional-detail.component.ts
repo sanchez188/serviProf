@@ -47,7 +47,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
             </div>
             <div class="price-section">
               <div class="price">
-                <span class="price-amount">\${{ professional()!.hourlyRate || professional()!.price }}</span>
+                <span class="price-amount">\${{ professional()!.hourly_rate || professional()!.price }}</span>
                 <span class="price-unit">/hora</span>
               </div>
             </div>
@@ -151,7 +151,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                     @if (bookingForm.get('hours')?.value) {
                       <div class="price-summary">
                         <div class="price-breakdown">
-                          <span>{{ bookingForm.get('hours')?.value }} horas × \${{ professional()!.hourly_rate || professional()!.price }}</span>
+                          <span>{{ bookingForm.get('hours')?.value }} horas × \${{ professional()!.hourlyRate || professional()!.price }}</span>
                           <span class="total-price">\${{ calculateTotal() }}</span>
                         </div>
                       </div>
