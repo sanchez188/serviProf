@@ -539,7 +539,7 @@ export class ProfessionalProfileSetupComponent implements OnInit {
 
     const currentUser = this.authService.currentUser();
     // If user already has a professional profile, populate the form
-    if (currentUser.professionalProfile) {
+    if (currentUser && currentUser.professionalProfile) {
       this.populateForm(currentUser.professionalProfile);
     }
   }
