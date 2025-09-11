@@ -12,8 +12,7 @@ export interface User {
 }
 
 export enum UserType {
-  CLIENT = 'client',
-  PROFESSIONAL = 'professional'
+  CLIENT = 'client'
 }
 
 export interface ProfessionalProfile {

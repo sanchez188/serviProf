@@ -532,18 +532,12 @@ export class ProfessionalProfileSetupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Check if user is professional
-    const currentUser = this.authService.currentUser();
-    if (!currentUser || currentUser.userType !== UserType.PROFESSIONAL) {
-      this.router.navigate(["/"]);
-      return;
-    }
-
     // Load categories
     this.professionalsService.getCategories().subscribe((categories) => {
       this.categories = categories;
     });
 
+    const currentUser = this.authService.currentUser();
     // If user already has a professional profile, populate the form
     if (currentUser.professionalProfile) {
       this.populateForm(currentUser.professionalProfile);

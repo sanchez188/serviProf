@@ -49,12 +49,12 @@ export const routes: Routes = [
   {
     path: 'professional-setup',
     loadComponent: () => import('./pages/professional-profile-setup/professional-profile-setup.component').then(m => m.ProfessionalProfileSetupComponent),
-    canActivate: [professionalGuard]
+    canActivate: [authGuard]
   },
   {
     path: 'professional-dashboard',
     loadComponent: () => import('./pages/professional-dashboard/professional-dashboard.component').then(m => m.ProfessionalDashboardComponent),
-    canActivate: [professionalGuard]
+    canActivate: [authGuard]
   },
   {
     path: '**',

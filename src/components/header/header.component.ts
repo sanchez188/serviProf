@@ -35,11 +35,9 @@ import { isSupabaseConfigured } from '../../lib/supabase';
             <a routerLink="/my-services" routerLinkActive="active" class="nav-link">
               Mis Servicios
             </a>
-            @if (authService.currentUser()?.userType === UserType.PROFESSIONAL) {
-              <a routerLink="/professional-dashboard" routerLinkActive="active" class="nav-link">
-                Dashboard Profesional
-              </a>
-            }
+            <a routerLink="/professional-dashboard" routerLinkActive="active" class="nav-link">
+              Dashboard Profesional
+            </a>
             <div class="user-menu">
               <button class="user-button" (click)="toggleUserMenu()">
                 <img 

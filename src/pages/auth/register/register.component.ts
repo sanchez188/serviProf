@@ -518,7 +518,7 @@ export class RegisterComponent {
       this.successMessage = '';
       const { confirmPassword, ...formData } = this.registerForm.value;
       
-      // Siempre registrar como cliente por defecto
+      // Todos los usuarios son 'client' por defecto (pueden ofrecer y solicitar servicios)
       const registerData = {
         ...formData,
         userType: UserType.CLIENT

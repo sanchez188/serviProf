@@ -23,7 +23,7 @@ export class ProfessionalService {
     this.isLoadingSignal.set(true);
     const currentUser = this.authService.currentUser();
 
-    if (!currentUser || currentUser.userType !== UserType.PROFESSIONAL) {
+    if (!currentUser) {
       return from([]);
     }
 

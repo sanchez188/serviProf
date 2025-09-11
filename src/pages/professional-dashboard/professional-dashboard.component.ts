@@ -803,13 +803,13 @@ export class ProfessionalDashboardComponent implements OnInit {
   BookingStatus = BookingStatus;
 
   ngOnInit(): void {
-    // Check if user is professional
-    if (!this.currentUser || this.currentUser.userType !== UserType.PROFESSIONAL) {
-      this.router.navigate(['/']);
+    // Cualquier usuario autenticado puede ver su dashboard profesional
+    if (!this.currentUser) {
+      this.router.navigate(['/auth/login']);
       return;
     }
 
-    // Load bookings when component initializes
+    // Cargar bookings del usuario actual
     this.professionalService.getProfessionalBookings().subscribe((bookings) => {
       this.bookings.set(bookings);
     });

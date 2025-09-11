@@ -1,7 +1,6 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { UserType } from '../models/user.model';
 import { map } from 'rxjs/operators';
 
 export const professionalGuard: CanActivateFn = (route, state) => {
@@ -17,11 +16,7 @@ export const professionalGuard: CanActivateFn = (route, state) => {
         return false;
       }
 
-      if (currentUser.userType !== UserType.PROFESSIONAL) {
-        router.navigate(['/']);
-        return false;
-      }
-
+      // Cualquier usuario autenticado puede acceder
       return true;
     })
   );
