@@ -35,6 +35,9 @@ import { isSupabaseConfigured } from '../../lib/supabase';
             <a routerLink="/my-services" routerLinkActive="active" class="nav-link">
               Mis Servicios
             </a>
+            <a routerLink="/availability" routerLinkActive="active" class="nav-link">
+              Mi Agenda
+            </a>
             <a routerLink="/professional-dashboard" routerLinkActive="active" class="nav-link">
               Dashboard Profesional
             </a>

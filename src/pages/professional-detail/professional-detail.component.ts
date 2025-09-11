@@ -4,8 +4,10 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ProfessionalsService } from '../../services/professionals.service';
 import { BookingsService } from '../../services/bookings.service';
+import { AvailabilityService } from '../../services/availability.service';
 import { AuthService } from '../../services/auth.service';
 import { Service } from '../../models/service.model';
+import { AvailableSlot } from '../../models/availability.model';
 import { StarRatingComponent } from '../../components/star-rating/star-rating.component';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 
@@ -119,12 +121,22 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
 
                     <div class="form-group">
                       <label for="startTime">Hora de inicio</label>
-                      <select id="startTime" formControlName="startTime" class="form-control">
+                      <select 
+                        id="startTime" 
+                        formControlName="startTime" 
+                        class="form-control"
+                        [disabled]="!selectedDate || availableTimes.length === 0"
+                      >
                         <option value="">Seleccionar hora</option>
                         @for (time of availableTimes; track time) {
                           <option [value]="time">{{ time }}</option>
                         }
                       </select>
+                      @if (selectedDate && availableTimes.length === 0) {
+                        <div class="availability-message">
+                          No hay horarios disponibles para esta fecha
+                        </div>
+                      }
                     </div>
 
                     <div class="form-group">
@@ -154,6 +166,14 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                           <span>{{ bookingForm.get('hours')?.value }} horas × \${{ professional()!.hourlyRate || professional()!.price }}</span>
                           <span class="total-price">\${{ calculateTotal() }}</span>
                         </div>
+                        @if (selectedDate && bookingForm.get('startTime')?.value && bookingForm.get('hours')?.value) {
+                          <div class="booking-time-info">
+                            <small>
+                              📅 {{ formatBookingDate(selectedDate) }} de {{ bookingForm.get('startTime')?.value }} 
+                              a {{ calculateEndTime(bookingForm.get('startTime')?.value, bookingForm.get('hours')?.value) }}
+                            </small>
+                          </div>
+                        }
                       </div>
                     }
 
@@ -505,6 +525,17 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       align-items: center;
     }
 
+    .booking-time-info {
+      margin-top: 0.5rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #bae6fd;
+    }
+
+    .booking-time-info small {
+      color: #0369a1;
+      font-weight: 500;
+    }
+
     .total-price {
       font-size: 1.25rem;
       font-weight: bold;
@@ -527,6 +558,13 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       background: #f0fdf4;
       color: #166534;
       border: 1px solid #bbf7d0;
+    }
+
+    .availability-message {
+      color: #f59e0b;
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+      font-style: italic;
     }
 
     .btn {
@@ -606,14 +644,17 @@ export class ProfessionalDetailComponent implements OnInit {
   
   professionalsService = inject(ProfessionalsService);
   bookingsService = inject(BookingsService);
+  availabilityService = inject(AvailabilityService);
   authService = inject(AuthService);
 
   professional = signal<Service | null>(null);
+  availableSlots = signal<AvailableSlot[]>([]);
   bookingForm: FormGroup;
   bookingError = '';
   bookingSuccess = false;
   minDate = '';
-  availableTimes = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+  availableTimes: string[] = [];
+  selectedDate = '';
 
   constructor() {
     this.bookingForm = this.fb.group({
@@ -621,6 +662,19 @@ export class ProfessionalDetailComponent implements OnInit {
       startTime: ['', Validators.required],
       hours: ['', Validators.required],
       description: ['']
+    });
+
+    // Watch for date changes to load available slots
+    this.bookingForm.get('date')?.valueChanges.subscribe(date => {
+      if (date && this.professional()) {
+        this.selectedDate = date;
+        this.loadAvailableSlots(date);
+      }
+    });
+
+    // Watch for hours changes to update available times
+    this.bookingForm.get('hours')?.valueChanges.subscribe(() => {
+      this.updateAvailableTimes();
     });
 
     // Set minimum date to today
@@ -693,6 +747,76 @@ export class ProfessionalDetailComponent implements OnInit {
       return hours * (professional.hourlyRate || professional.price || 0);
     }
     return 0;
+  }
+
+  loadAvailableSlots(date: string): void {
+    const professional = this.professional();
+    if (!professional?.user?.id) return;
+
+    const selectedDate = new Date(date);
+    const hours = this.bookingForm.get('hours')?.value || 1;
+
+    this.availabilityService.getAvailableSlots(professional.user.id, selectedDate, hours).subscribe({
+      next: (slots) => {
+        this.availableSlots.set(slots);
+        this.updateAvailableTimes();
+      },
+      error: (error) => {
+        console.error('Error loading available slots:', error);
+        this.availableSlots.set([]);
+        this.availableTimes = [];
+      }
+    });
+  }
+
+  updateAvailableTimes(): void {
+    const slots = this.availableSlots();
+    const hours = this.bookingForm.get('hours')?.value || 1;
+    
+    // Filter slots that can accommodate the requested duration
+    const validSlots = slots.filter(slot => {
+      const slotDuration = this.calculateSlotDuration(slot.startTime, slot.endTime);
+      return slotDuration >= hours;
+    });
+
+    this.availableTimes = validSlots.map(slot => slot.startTime);
+    
+    // Clear start time if current selection is no longer valid
+    const currentStartTime = this.bookingForm.get('startTime')?.value;
+    if (currentStartTime && !this.availableTimes.includes(currentStartTime)) {
+      this.bookingForm.get('startTime')?.setValue('');
+    }
+  }
+
+  calculateSlotDuration(startTime: string, endTime: string): number {
+    const start = new Date(`2000-01-01T${startTime}`);
+    const end = new Date(`2000-01-01T${endTime}`);
+    return (end.getTime() - start.getTime()) / (1000 * 60 * 60); // hours
+  }
+
+  calculateEndTime(startTime: string, hours: number): string {
+    if (!startTime || !hours) return '';
+    
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(startHour, startMinute, 0, 0);
+
+    const endDate = new Date(startDate.getTime() + hours * 60 * 60 * 1000);
+
+    return `${endDate.getHours().toString().padStart(2, '0')}:${endDate
+      .getMinutes()
+      .toString()
+      .padStart(2, '0')}`;
+  }
+
+  formatBookingDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    }).format(date);
   }
 
   goToLogin(): void {
