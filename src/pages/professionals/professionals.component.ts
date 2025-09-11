@@ -141,7 +141,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                     <div class="detail-item">
                       <span class="detail-label">💰 Precio:</span>
                       <span class="price">{{ getFormattedPrice(service) }}</span>
-                    }
+                    </div>
                   </div>
                 </div>
 

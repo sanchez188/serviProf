@@ -123,7 +123,7 @@ export class BookingsService {
             name,
             avatar
           ),
-          professionals (
+          services!bookings_service_id_fkey (
             categories (
               name
             )
@@ -176,7 +176,7 @@ export class BookingsService {
             name,
             avatar
           ),
-          professionals (
+          services!bookings_service_id_fkey (
             categories (
               name
             )
@@ -321,7 +321,7 @@ export class BookingsService {
       professional: {
         name: data.professional?.name || 'Profesional',
         avatar: data.professional?.avatar || '',
-        category: data.professionals?.categories?.name || 'Servicio'
+        category: data.services?.categories?.name || 'Servicio'
       },
       date: new Date(data.date),
       startTime: data.start_time,

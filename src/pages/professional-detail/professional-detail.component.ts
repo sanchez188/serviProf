@@ -5,7 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { ProfessionalsService } from '../../services/professionals.service';
 import { BookingsService } from '../../services/bookings.service';
 import { AuthService } from '../../services/auth.service';
-import { Professional } from '../../models/professional.model';
+import { Service } from '../../models/service.model';
 import { StarRatingComponent } from '../../components/star-rating/star-rating.component';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 
@@ -638,7 +638,7 @@ export class ProfessionalDetailComponent implements OnInit {
   bookingsService = inject(BookingsService);
   authService = inject(AuthService);
 
-  professional = signal<Professional | null>(null);
+  professional = signal<Service | null>(null);
   bookingForm: FormGroup;
   bookingError = '';
   bookingSuccess = false;
@@ -668,9 +668,9 @@ export class ProfessionalDetailComponent implements OnInit {
   }
 
   loadProfessional(id: string): void {
-    this.professionalsService.getProfessionalById(id).subscribe(professional => {
-      if (professional) {
-        this.professional.set(professional);
+    this.professionalsService.getProfessionalById(id).subscribe(service => {
+      if (service) {
+        this.professional.set(service);
       }
     });
   }
