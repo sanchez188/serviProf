@@ -29,8 +29,8 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
               >
               <div class="professional-info">
                 <h1>{{ professional()!.user?.name }}</h1>
-                <div class="category-badge" [style.background-color]="professional()!.category.color">
-                  {{ professional()!.category.name }}
+                <div class="category-badge" [style.background-color]="professional()!.category?.color || '#3B82F6'">
+                  {{ professional()!.category?.name || 'Servicio' }}
                 </div>
                 <div class="professional-meta">
                   <span class="verified-badge">✅ Verificado</span>
@@ -47,7 +47,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
             </div>
             <div class="price-section">
               <div class="price">
-                <span class="price-amount">\${{ professional()!.hourly_rate || professional()!.price }}</span>
+                <span class="price-amount">\${{ professional()!.hourlyRate || professional()!.price }}</span>
                 <span class="price-unit">/hora</span>
               </div>
             </div>
