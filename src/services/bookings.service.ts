@@ -314,7 +314,6 @@ export class BookingsService {
       userId: data.user_id,
       professionalId: data.professional_id,
       serviceId: data.service_id,
-      serviceId: data.service_id,
       client: {
         name: data.client?.name || 'Cliente',
         avatar: data.client?.avatar || '',
