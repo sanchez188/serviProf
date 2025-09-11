@@ -917,14 +917,17 @@ export class ProfessionalDashboardComponent implements OnInit {
   completeJob(booking: Booking): void {
     this.professionalService.completeJob(booking.id).subscribe({
       next: () => {
-        // Reload bookings after completing job
-        this.professionalService.getProfessionalBookings().subscribe((bookings) => {
-          this.bookings.set(bookings);
-        });
+        this.loadBookings();
       },
       error: (error) => {
         console.error('Error completing job:', error);
       },
+    });
+  }
+
+  private loadBookings(): void {
+    this.professionalService.getProfessionalBookings().subscribe((bookings) => {
+      this.bookings.set(bookings);
     });
   }
 }
