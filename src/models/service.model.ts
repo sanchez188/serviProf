@@ -14,6 +14,7 @@ export interface Service {
   availabilitySchedule: AvailabilitySchedule;
   rating: number;
   reviewCount: number;
+  review_count: number;
   totalOrders: number;
   createdAt: Date;
   updatedAt: Date;

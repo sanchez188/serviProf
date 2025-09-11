@@ -216,6 +216,7 @@ export class ProfessionalsService {
       availabilitySchedule: data.availability_schedule || {},
       rating: data.rating || 0,
       reviewCount: data.review_count || 0,
+      review_count: data.review_count || 0,
       totalOrders: data.total_orders || 0,
       createdAt: new Date(data.created_at),
       updatedAt: new Date(data.updated_at),
