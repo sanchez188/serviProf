@@ -28,11 +28,9 @@ import { isSupabaseConfigured } from '../../lib/supabase';
           <a routerLink="/services" routerLinkActive="active" class="nav-link">
             Servicios
           </a>
-          @if (!authService.isAuthenticated()) {
-            <a routerLink="/professionals" routerLinkActive="active" class="nav-link">
-              Profesionales
-            </a>
-          }
+          <a routerLink="/professionals" routerLinkActive="active" class="nav-link">
+            Profesionales
+          </a>
           @if (authService.isAuthenticated()) {
             <a routerLink="/my-services" routerLinkActive="active" class="nav-link">
               Mis Servicios

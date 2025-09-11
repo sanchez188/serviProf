@@ -31,24 +31,29 @@ export class BookingsService {
 
     return from(
       supabase
-        .from('professionals')
-        .select('hourly_rate')
+        .from('services')
+        .select('hourly_rate, price, price_type')
         .eq('id', request.professionalId)
         .single()
     ).pipe(
-      switchMap(({ data: professional, error }) => {
-        if (error || !professional) {
-          throw new Error('Profesional no encontrado');
+      switchMap(({ data: service, error }) => {
+        if (error || !service) {
+          throw new Error('Servicio no encontrado');
         }
 
-        const totalPrice = professional.hourly_rate * request.hours;
+        let totalPrice = 0;
+        if (service.price_type === 'hourly' && service.hourly_rate) {
+          totalPrice = service.hourly_rate * request.hours;
+        } else if (service.price_type === 'fixed' && service.price) {
+          totalPrice = service.price;
+        }
 
         return from(
           supabase
             .from('bookings')
             .insert({
               user_id: currentUser.id,
-              professional_id: request.professionalId,
+              service_id: request.professionalId,
               date: request.date.toISOString().split('T')[0],
               start_time: request.startTime,
               end_time: endTime,
@@ -64,11 +69,13 @@ export class BookingsService {
                 avatar,
                 phone
               ),
-              professional:profiles!bookings_professional_id_fkey (
-                name,
-                avatar
-              ),
-              professionals (
+              services (
+                title,
+                user_id,
+                profiles!services_user_id_fkey (
+                  name,
+                  avatar
+                ),
                 categories (
                   name
                 )

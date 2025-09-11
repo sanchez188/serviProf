@@ -134,6 +134,68 @@ export type Database = {
           created_at?: string | null;
         };
       };
+      services: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          category_id: string | null;
+          title: string;
+          description: string | null;
+          price_type: string | null;
+          price: number | null;
+          hourly_rate: number | null;
+          location: string | null;
+          images: string[] | null;
+          tags: string[] | null;
+          availability_schedule: any | null;
+          is_active: boolean | null;
+          rating: number | null;
+          review_count: number | null;
+          total_orders: number | null;
+          created_at: string | null;
+          updated_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          category_id?: string | null;
+          title: string;
+          description?: string | null;
+          price_type?: string | null;
+          price?: number | null;
+          hourly_rate?: number | null;
+          location?: string | null;
+          images?: string[] | null;
+          tags?: string[] | null;
+          availability_schedule?: any | null;
+          is_active?: boolean | null;
+          rating?: number | null;
+          review_count?: number | null;
+          total_orders?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          category_id?: string | null;
+          title?: string;
+          description?: string | null;
+          price_type?: string | null;
+          price?: number | null;
+          hourly_rate?: number | null;
+          location?: string | null;
+          images?: string[] | null;
+          tags?: string[] | null;
+          availability_schedule?: any | null;
+          is_active?: boolean | null;
+          rating?: number | null;
+          review_count?: number | null;
+          total_orders?: number | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+        };
+      };
       categories: {
         Row: {
           id: string;

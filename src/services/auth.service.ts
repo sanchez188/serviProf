@@ -95,7 +95,7 @@ export class AuthService {
             id: user.id,
             email: user.email || '',
             name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
-            user_type: 'client',
+            user_type: UserType.CLIENT,
             avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'] || defaultAvatar,
             phone: user.user_metadata?.['phone']
           };
