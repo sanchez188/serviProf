@@ -2,6 +2,7 @@ export interface Booking {
   id: string;
   userId: string;
   professionalId: string;
+  serviceId: string;
   client: {
     name: string;
     avatar: string;
@@ -11,6 +12,7 @@ export interface Booking {
     name: string;
     avatar: string;
     category: string;
+    serviceTitle?: string;
   };
   date: Date;
   startTime: string;

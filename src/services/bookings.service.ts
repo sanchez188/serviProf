@@ -313,6 +313,7 @@ export class BookingsService {
       id: data.id,
       userId: data.user_id,
       professionalId: data.professional_id,
+      serviceId: data.service_id,
       client: {
         name: data.client?.name || 'Cliente',
         avatar: data.client?.avatar || '',
@@ -321,7 +322,8 @@ export class BookingsService {
       professional: {
         name: data.professional?.name || 'Profesional',
         avatar: data.professional?.avatar || '',
-        category: data.services?.categories?.name || 'Servicio'
+        category: data.services?.categories?.name || 'Servicio',
+        serviceTitle: data.services?.title || 'Servicio'
       },
       date: new Date(data.date),
       startTime: data.start_time,

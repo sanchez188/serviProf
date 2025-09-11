@@ -17,7 +17,6 @@ export class ProfessionalService {
   isLoading = this.isLoadingSignal.asReadonly();
 
   constructor(private authService: AuthService) {
-    this.loadProfessionalBookings();
   }
 
   getProfessionalBookings(): Observable<Booking[]> {
@@ -43,6 +42,7 @@ export class ProfessionalService {
             avatar
           ),
           services!bookings_service_id_fkey (
+            title,
             categories (
               name
             )
@@ -271,6 +271,7 @@ export class ProfessionalService {
       id: data.id,
       userId: data.user_id,
       professionalId: data.professional_id,
+      serviceId: data.service_id,
       client: {
         name: data.client?.name || 'Cliente',
         avatar: data.client?.avatar || '',
@@ -279,7 +280,8 @@ export class ProfessionalService {
       professional: {
         name: data.professional?.name || 'Profesional',
         avatar: data.professional?.avatar || '',
-        category: data.services?.categories?.name || 'Servicio'
+        category: data.services?.categories?.name || 'Servicio',
+        serviceTitle: data.services?.title || 'Servicio'
       },
       date: new Date(data.date),
       startTime: data.start_time,

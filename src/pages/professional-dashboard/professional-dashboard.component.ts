@@ -100,6 +100,7 @@ import { UserType } from '../../models/user.model';
                       >
                       <div class="booking-info">
                         <h3>{{ booking.client.name }}</h3>
+                        <div class="service-title">{{ booking.professional.serviceTitle }}</div>
                         <div class="booking-date">{{ formatDate(booking.date) }}</div>
                         <div class="booking-time">{{ booking.startTime }} - {{ booking.endTime }}</div>
                       </div>
@@ -163,6 +164,7 @@ import { UserType } from '../../models/user.model';
                       >
                       <div class="booking-info">
                         <h3>{{ booking.client.name }}</h3>
+                        <div class="service-title">{{ booking.professional.serviceTitle }}</div>
                         <div class="booking-date">{{ formatDate(booking.date) }}</div>
                         <div class="booking-time">{{ booking.startTime }} - {{ booking.endTime }}</div>
                         <div class="booking-status" [class]="'status-' + booking.status">
@@ -233,6 +235,7 @@ import { UserType } from '../../models/user.model';
                       >
                       <div class="booking-info">
                         <h3>{{ booking.client.name }}</h3>
+                        <div class="service-title">{{ booking.professional.serviceTitle }}</div>
                         <div class="booking-date">{{ formatDate(booking.date) }}</div>
                         <div class="completion-date">
                           Completado el {{ formatDate(booking.completedAt!) }}
@@ -469,6 +472,13 @@ import { UserType } from '../../models/user.model';
       font-size: 1.25rem;
       font-weight: bold;
       color: #1f2937;
+      margin-bottom: 0.25rem;
+    }
+
+    .service-title {
+      color: #3b82f6;
+      font-size: 0.875rem;
+      font-weight: 500;
       margin-bottom: 0.25rem;
     }
 
