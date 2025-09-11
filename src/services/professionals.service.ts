@@ -4,6 +4,7 @@ import { map, catchError, tap } from 'rxjs/operators';
 import { supabase } from '../lib/supabase';
 import { ServiceCategory } from '../models/professional.model';
 import { Service } from '../models/service.model';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,7 @@ export class ProfessionalsService {
   categories = this.categoriesSignal.asReadonly();
   isLoading = this.isLoadingSignal.asReadonly();
 
-  constructor() {
+  constructor(private authService: AuthService) {
     this.loadCategories();
   }
 
@@ -39,6 +40,7 @@ export class ProfessionalsService {
 
   getProfessionals(categoryId?: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
+    const currentUser = this.authService.currentUser();
     
     let query = supabase
       .from('services')
@@ -58,6 +60,11 @@ export class ProfessionalsService {
         )
       `)
       .eq('is_active', true);
+
+    // Excluir servicios del usuario actual
+    if (currentUser) {
+      query = query.neq('user_id', currentUser.id);
+    }
 
     if (categoryId) {
       query = query.eq('category_id', categoryId);
@@ -159,8 +166,9 @@ export class ProfessionalsService {
 
   searchProfessionals(query: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
+    const currentUser = this.authService.currentUser();
     
-    return from(
+    let supabaseQuery = 
       supabase
         .from('services')
         .select(`
@@ -179,8 +187,14 @@ export class ProfessionalsService {
           )
         `)
         .eq('is_active', true)
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%`)
-    ).pipe(
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%`);
+
+    // Excluir servicios del usuario actual
+    if (currentUser) {
+      supabaseQuery = supabaseQuery.neq('user_id', currentUser.id);
+    }
+
+    return from(supabaseQuery).pipe(
       map(({ data, error }) => {
         if (error) {
           throw error;

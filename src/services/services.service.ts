@@ -23,6 +23,7 @@ export class ServicesService {
   // Obtener todos los servicios activos
   getAllServices(categoryId?: string, location?: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
+    const currentUser = this.authService.currentUser();
     
     let query = supabase
       .from('services')
@@ -43,6 +44,11 @@ export class ServicesService {
       `)
       .eq('is_active', true)
       .order('created_at', { ascending: false });
+
+    // Excluir servicios del usuario actual
+    if (currentUser) {
+      query = query.neq('user_id', currentUser.id);
+    }
 
     if (categoryId) {
       query = query.eq('category_id', categoryId);
@@ -307,8 +313,9 @@ export class ServicesService {
   // Buscar servicios
   searchServices(query: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
+    const currentUser = this.authService.currentUser();
     
-    return from(
+    let supabaseQuery = 
       supabase
         .from('services')
         .select(`
@@ -328,8 +335,14 @@ export class ServicesService {
         `)
         .eq('is_active', true)
         .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%`)
-        .order('created_at', { ascending: false })
-    ).pipe(
+        .order('created_at', { ascending: false });
+
+    // Excluir servicios del usuario actual
+    if (currentUser) {
+      supabaseQuery = supabaseQuery.neq('user_id', currentUser.id);
+    }
+
+    return from(supabaseQuery).pipe(
       map(({ data, error }) => {
         if (error) {
           throw error;
