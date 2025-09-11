@@ -425,6 +425,67 @@ import { UserType } from '../../../models/user.model';
       font-size: 0.875rem;
       color: #6b7280;
     }
+
+    /* Email Confirmation Styles */
+    .confirmation-screen {
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .confirmation-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    .confirmation-screen h1 {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+
+    .confirmation-steps {
+      text-align: left;
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+    }
+
+    .confirmation-steps h3 {
+      color: #1f2937;
+      margin-bottom: 1rem;
+    }
+
+    .confirmation-steps ol {
+      padding-left: 1.5rem;
+    }
+
+    .confirmation-steps li {
+      margin-bottom: 0.5rem;
+      color: #374151;
+    }
+
+    .confirmation-actions {
+      margin: 2rem 0;
+    }
+
+    .confirmation-help {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .confirmation-help p {
+      color: #6b7280;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert-success {
+      background: #f0fdf4;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
   `]
 })
 export class RegisterComponent {
@@ -505,3 +566,5 @@ export class RegisterComponent {
     this.router.navigate(['/auth/login']);
   }
 }
+}
+)
