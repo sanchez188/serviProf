@@ -110,7 +110,7 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
-        this.loadProfessionalBookings();
+        this.getProfessionalBookings().subscribe();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
@@ -158,7 +158,7 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
-        this.loadProfessionalBookings();
+        this.getProfessionalBookings().subscribe();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
@@ -202,7 +202,7 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
-        this.loadProfessionalBookings();
+        this.getProfessionalBookings().subscribe();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
