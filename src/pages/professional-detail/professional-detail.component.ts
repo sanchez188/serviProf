@@ -31,8 +31,6 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                 <h1>{{ professional()!.user?.name }}</h1>
                 <div class="category-badge" [style.background-color]="professional()!.category.color">
                   {{ professional()!.category.name }}
-                <div class="category-badge" [style.background-color]="professional()!.category?.color || '#3B82F6'">
-                  {{ professional()!.category?.name || 'Servicio' }}
                 </div>
                 <div class="professional-meta">
                   <span class="verified-badge">✅ Verificado</span>
@@ -664,7 +662,7 @@ export class ProfessionalDetailComponent implements OnInit {
     const hours = this.bookingForm.get('hours')?.value;
     const professional = this.professional();
     if (hours && professional) {
-      return hours * (professional.hourly_rate || professional.price || 0);
+      return hours * (professional.hourlyRate || professional.price || 0);
     }
     return 0;
   }
