@@ -661,8 +661,14 @@ export class ProfessionalDetailComponent implements OnInit {
   loadService(id: string): void {
     this.professionalsService.getProfessionalById(id).subscribe({
       next: (service) => {
-      if (service) {
-        this.professional.set(service);
+        if (service) {
+          this.professional.set(service);
+        } else {
+          console.error('Service not found');
+        }
+      },
+      error: (error) => {
+        console.error('Error loading service:', error);
       }
     });
   }
@@ -700,7 +706,7 @@ export class ProfessionalDetailComponent implements OnInit {
 
       const formValue = this.bookingForm.value;
       const bookingRequest = {
-        serviceId: this.professional()!.id,
+        professionalId: this.professional()!.id,
         date: new Date(formValue.date),
         startTime: formValue.startTime,
         hours: formValue.hours,
@@ -717,13 +723,7 @@ export class ProfessionalDetailComponent implements OnInit {
         },
         error: (error) => {
           this.bookingError = error.message;
-        } else {
-          console.error('Service not found');
         }
-      },
-      error: (error) => {
-        console.error('Error loading service:', error);
-      }
       });
     }
   }
