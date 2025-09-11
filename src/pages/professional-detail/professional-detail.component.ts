@@ -23,12 +23,12 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
           <div class="professional-header">
             <div class="professional-main-info">
               <img 
-                [src]="professional()!.avatar" 
-                [alt]="professional()!.name"
+                [src]="professional()!.user?.avatar" 
+                [alt]="professional()!.user?.name"
                 class="professional-avatar"
               >
               <div class="professional-info">
-                <h1>{{ professional()!.name }}</h1>
+                <h1>{{ professional()!.user?.name }}</h1>
                 <div class="category-badge" [style.background-color]="professional()!.category.color">
                   {{ professional()!.category.name }}
                 </div>
@@ -36,7 +36,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                   @if (professional()!.isVerified) {
                     <span class="verified-badge">✅ Verificado</span>
                   }
-                  <span class="experience">💼 {{ professional()!.experience }} años de experiencia</span>
+                  <span class="experience">💼 Profesional verificado</span>
                   <span class="location">📍 {{ professional()!.location }}</span>
                 </div>
                 <div class="rating-section">
@@ -49,7 +49,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
             </div>
             <div class="price-section">
               <div class="price">
-                <span class="price-amount">\${{ professional()!.hourlyRate }}</span>
+                <span class="price-amount">\${{ professional()!.hourly_rate || professional()!.price }}</span>
                 <span class="price-unit">/hora</span>
               </div>
             </div>
@@ -60,7 +60,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
             <div class="left-column">
               <!-- Description -->
               <div class="section">
-                <h2>Acerca de {{ professional()!.name }}</h2>
+                <h2>Acerca de {{ professional()!.user?.name }}</h2>
                 <p>{{ professional()!.description }}</p>
               </div>
 
@@ -68,10 +68,10 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
               <div class="section">
                 <h2>Habilidades y Servicios</h2>
                 <div class="skills-grid">
-                  @for (skill of professional()!.skills; track skill) {
+                  @for (tag of professional()!.tags; track tag) {
                     <div class="skill-item">
                       <span class="skill-icon">✓</span>
-                      <span>{{ skill }}</span>
+                      <span>{{ tag }}</span>
                     </div>
                   }
                 </div>
@@ -80,44 +80,16 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
               <!-- Availability -->
               <div class="section">
                 <h2>Disponibilidad</h2>
-                <div class="availability-grid">
-                  @for (availability of professional()!.availability; track availability.dayOfWeek) {
-                    <div class="availability-item">
-                      <span class="day">{{ getDayName(availability.dayOfWeek) }}</span>
-                      <span class="time">{{ availability.startTime }} - {{ availability.endTime }}</span>
-                    </div>
-                  }
-                </div>
+                <p>Disponible para reservas. Contacta para coordinar horarios.</p>
               </div>
 
               <!-- Reviews -->
               <div class="section">
-                <h2>Reseñas ({{ professional()!.reviews.length }})</h2>
+                <h2>Reseñas ({{ professional()!.review_count }})</h2>
                 <div class="reviews-list">
-                  @for (review of professional()!.reviews; track review.id) {
-                    <div class="review-item">
-                      <div class="review-header">
-                        <div class="reviewer-info">
-                          @if (review.userAvatar) {
-                            <img [src]="review.userAvatar" [alt]="review.userName" class="reviewer-avatar">
-                          } @else {
-                            <div class="reviewer-avatar-placeholder">{{ review.userName.charAt(0) }}</div>
-                          }
-                          <div>
-                            <div class="reviewer-name">{{ review.userName }}</div>
-                            <div class="review-date">{{ formatDate(review.date) }}</div>
-                          </div>
-                        </div>
-                        <app-star-rating [rating]="review.rating" [showCount]="false"></app-star-rating>
-                      </div>
-                      <div class="review-service">{{ review.serviceType }}</div>
-                      <p class="review-comment">{{ review.comment }}</p>
-                    </div>
-                  } @empty {
-                    <div class="no-reviews">
-                      <p>Aún no hay reseñas para este profesional.</p>
-                    </div>
-                  }
+                  <div class="no-reviews">
+                    <p>Las reseñas se mostrarán aquí una vez que haya reservas completadas.</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -181,7 +153,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                     @if (bookingForm.get('hours')?.value) {
                       <div class="price-summary">
                         <div class="price-breakdown">
-                          <span>{{ bookingForm.get('hours')?.value }} horas × \${{ professional()!.hourlyRate }}</span>
+                          <span>{{ bookingForm.get('hours')?.value }} horas × \${{ professional()!.hourly_rate || professional()!.price }}</span>
                           <span class="total-price">\${{ calculateTotal() }}</span>
                         </div>
                       </div>
@@ -692,7 +664,7 @@ export class ProfessionalDetailComponent implements OnInit {
     const hours = this.bookingForm.get('hours')?.value;
     const professional = this.professional();
     if (hours && professional) {
-      return hours * professional.hourlyRate;
+      return hours * (professional.hourly_rate || professional.price || 0);
     }
     return 0;
   }
