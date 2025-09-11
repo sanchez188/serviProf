@@ -44,7 +44,7 @@ import { isSupabaseConfigured } from '../../lib/supabase';
             <div class="user-menu">
               <button class="user-button" (click)="toggleUserMenu()">
                 <img 
-                  [src]="authService.currentUser()?.avatar || '/assets/default-avatar.png'" 
+                  [src]="authService.currentUser()?.avatar || generateDefaultAvatar(authService.currentUser()?.name || 'Usuario')" 
                   [alt]="authService.currentUser()?.name"
                   class="user-avatar"
                 >
@@ -340,5 +340,10 @@ export class HeaderComponent {
     this.authService.logout();
     this.router.navigate(['/']);
     this.closeUserMenu();
+  }
+
+  generateDefaultAvatar(name: string): string {
+    const cleanName = encodeURIComponent(name.trim());
+    return `https://ui-avatars.com/api/?name=${cleanName}&background=3b82f6&color=ffffff&size=32&rounded=true&bold=true`;
   }
 }

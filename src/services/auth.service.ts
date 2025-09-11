@@ -83,12 +83,20 @@ export class AuthService {
         if (error.code === 'PGRST116') {
           console.log('Profile not found, creating new profile for user:', user.email);
           
+          // Default avatar based on user's name or email
+          const defaultAvatar = this.generateDefaultAvatar(
+            user.user_metadata?.['full_name'] || 
+            user.user_metadata?.['name'] || 
+            user.email?.split('@')[0] || 
+            'Usuario'
+          );
+          
           const newProfile = {
             id: user.id,
-            email: user.email,
+            email: user.email || '',
             name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
             user_type: 'client',
-            avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'],
+            avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'] || defaultAvatar,
             phone: user.user_metadata?.['phone']
           };
           
@@ -111,14 +119,20 @@ export class AuthService {
       }
 
       if (profileData) {
+        // Ensure we have a default avatar if none exists
+        const avatarUrl = profileData.avatar || 
+          user.user_metadata?.['avatar_url'] || 
+          user.user_metadata?.['picture'] || 
+          this.generateDefaultAvatar(profileData.name || user.email?.split('@')[0] || 'Usuario');
+
         const userProfile: User = {
           id: profileData.id,
-          email: profileData.email || user.email || '',
+          email: user.email || profileData.email || '',
           name: profileData.name || '',
           userType: (profileData.user_type as UserType) || UserType.CLIENT,
           phone: profileData.phone || undefined,
           address: profileData.address || undefined,
-          avatar: profileData.avatar || undefined,
+          avatar: avatarUrl,
           createdAt: new Date(profileData.created_at || user.created_at)
         };
 
@@ -156,9 +170,17 @@ export class AuthService {
         }
 
         this.currentUserSignal.set(userProfile);
+        console.log('✅ Perfil cargado:', {
+          name: userProfile.name,
+          email: userProfile.email,
+          avatar: userProfile.avatar,
+          userType: userProfile.userType
+        });
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
+    } finally {
+      this.isLoadingSignal.set(false);
     }
   }
 
@@ -350,6 +372,7 @@ export class AuthService {
         // Reload user profile to get updated data
         const session = this.sessionSubject.value;
         if (session?.user) {
+          console.log('🔄 Recargando perfil después de actualización...');
           return from(this.loadUserProfile(session.user)).pipe(
             map(() => this.currentUserSignal()!)
           );
@@ -362,6 +385,12 @@ export class AuthService {
         return throwError(() => new Error(error.message || 'Error updating profile'));
       })
     );
+  }
+
+  private generateDefaultAvatar(name: string): string {
+    // Generate a default avatar URL using a service like DiceBear or UI Avatars
+    const cleanName = encodeURIComponent(name.trim());
+    return `https://ui-avatars.com/api/?name=${cleanName}&background=3b82f6&color=ffffff&size=150&rounded=true&bold=true`;
   }
 
   private getErrorMessage(error: AuthError): string {
