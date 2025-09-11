@@ -189,13 +189,6 @@ import { UserType } from '../../../models/user.model';
       </div>
     </div>
   `,
-
-        <div class="auth-footer">
-          <p>¿Ya tienes cuenta? <a routerLink="/auth/login">Inicia sesión aquí</a></p>
-        </div>
-      </div>
-    </div>
-  `,
   styles: [`
     .auth-container {
       min-height: 100vh;
