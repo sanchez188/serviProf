@@ -103,18 +103,43 @@ export class AuthService {
           const { data: createdProfile, error: createError } = await supabase
             .from('profiles')
             .insert(newProfile)
-            .select()
+            .select('*')
             .single();
             
           if (createError) {
             console.error('Error creating profile:', createError);
-            return;
+            // Even if profile creation fails, continue with basic user data
+            profileData = {
+              id: user.id,
+              email: user.email || '',
+              name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
+              user_type: UserType.CLIENT,
+              avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'] || defaultAvatar,
+              phone: user.user_metadata?.['phone'],
+              created_at: user.created_at
+            };
+          } else {
+            profileData = createdProfile;
           }
-          
-          profileData = createdProfile;
         } else {
           console.error('Error loading profile:', error);
-          return;
+          // Create basic profile data from auth user
+          const defaultAvatar = this.generateDefaultAvatar(
+            user.user_metadata?.['full_name'] || 
+            user.user_metadata?.['name'] || 
+            user.email?.split('@')[0] || 
+            'Usuario'
+          );
+          
+          profileData = {
+            id: user.id,
+            email: user.email || '',
+            name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
+            user_type: UserType.CLIENT,
+            avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'] || defaultAvatar,
+            phone: user.user_metadata?.['phone'],
+            created_at: user.created_at
+          };
         }
       }
 
@@ -136,40 +161,8 @@ export class AuthService {
           createdAt: new Date(profileData.created_at || user.created_at)
         };
 
-        // Load professional profile if user is professional
-        if (userProfile.userType === UserType.PROFESSIONAL) {
-          const { data: professionalData } = await supabase
-            .from('professionals')
-            .select(`
-              *,
-              categories (
-                id,
-                name,
-                icon,
-                color
-              )
-            `)
-            .eq('id', user.id)
-            .single();
-
-          if (professionalData) {
-            userProfile.professionalProfile = {
-              categoryId: professionalData.category_id || '',
-              hourlyRate: professionalData.hourly_rate,
-              description: professionalData.description || '',
-              skills: professionalData.skills || [],
-              experience: professionalData.experience || 0,
-              location: professionalData.location || '',
-              availability: [], // This would need to be loaded separately if stored
-              isVerified: professionalData.is_verified || false,
-              rating: professionalData.rating || 0,
-              reviewCount: professionalData.review_count || 0,
-              completedJobs: professionalData.completed_jobs || 0
-            };
-          }
-        }
-
         this.currentUserSignal.set(userProfile);
+        this.isAuthenticated.set(true);
         console.log('✅ Perfil cargado:', {
           name: userProfile.name,
           email: userProfile.email,
@@ -179,6 +172,27 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Error loading user profile:', error);
+      // Create fallback profile to prevent infinite loading
+      const defaultAvatar = this.generateDefaultAvatar(
+        user.user_metadata?.['full_name'] || 
+        user.user_metadata?.['name'] || 
+        user.email?.split('@')[0] || 
+        'Usuario'
+      );
+      
+      const fallbackProfile: User = {
+        id: user.id,
+        email: user.email || '',
+        name: user.user_metadata?.['full_name'] || user.user_metadata?.['name'] || user.email?.split('@')[0] || 'Usuario',
+        userType: UserType.CLIENT,
+        phone: user.user_metadata?.['phone'],
+        address: undefined,
+        avatar: user.user_metadata?.['avatar_url'] || user.user_metadata?.['picture'] || defaultAvatar,
+        createdAt: new Date(user.created_at)
+      };
+      
+      this.currentUserSignal.set(fallbackProfile);
+      this.isAuthenticated.set(true);
     } finally {
       this.isLoadingSignal.set(false);
     }
@@ -206,8 +220,16 @@ export class AuthService {
           throw new Error('No user returned from login');
         }
         console.log('✅ Login exitoso:', data.user.email);
+        
+        // Wait for profile to load
         return from(this.loadUserProfile(data.user)).pipe(
-          map(() => this.currentUserSignal()!)
+          map(() => {
+            const currentUser = this.currentUserSignal();
+            if (!currentUser) {
+              throw new Error('Failed to load user profile');
+            }
+            return currentUser;
+          })
         );
       }),
       tap(() => this.isLoadingSignal.set(false)),
