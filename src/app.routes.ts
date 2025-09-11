@@ -24,6 +24,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/professional-detail/professional-detail.component').then(m => m.ProfessionalDetailComponent)
   },
   {
+    path: 'service/:id',
+    loadComponent: () => import('./pages/professional-detail/professional-detail.component').then(m => m.ProfessionalDetailComponent)
+  },
+  {
     path: 'my-services',
     loadComponent: () => import('./pages/my-services/my-services.component').then(m => m.MyServicesComponent),
     canActivate: [authGuard]

@@ -42,7 +42,7 @@ export enum BookingStatus {
 }
 
 export interface BookingRequest {
-  professionalId: string;
+  serviceId: string;
   date: Date;
   startTime: string;
   hours: number;

@@ -32,8 +32,8 @@ export class BookingsService {
     return from(
       supabase
         .from('services')
-        .select('hourly_rate, price, price_type')
-        .eq('id', request.professionalId)
+        .select('hourly_rate, price, price_type, user_id')
+        .eq('id', request.serviceId)
         .single()
     ).pipe(
       switchMap(({ data: service, error }) => {
@@ -53,7 +53,8 @@ export class BookingsService {
             .from('bookings')
             .insert({
               user_id: currentUser.id,
-              service_id: request.professionalId,
+              service_id: request.serviceId,
+              professional_id: service.user_id,
               date: request.date.toISOString().split('T')[0],
               start_time: request.startTime,
               end_time: endTime,
@@ -64,18 +65,17 @@ export class BookingsService {
             })
             .select(`
               *,
-              profiles!bookings_user_id_fkey (
+              client:profiles!bookings_user_id_fkey (
                 name,
                 avatar,
                 phone
               ),
+              professional:profiles!bookings_professional_id_fkey (
+                name,
+                avatar
+              ),
               services (
                 title,
-                user_id,
-                profiles!services_user_id_fkey (
-                  name,
-                  avatar
-                ),
                 categories (
                   name
                 )
