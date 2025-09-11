@@ -809,14 +809,12 @@ export class ProfessionalDashboardComponent implements OnInit {
       return;
     }
 
-    this.loadBookings();
-  }
-
-  loadBookings(): void {
+    // Load bookings when component initializes
     this.professionalService.getProfessionalBookings().subscribe((bookings) => {
       this.bookings.set(bookings);
     });
   }
+
 
   setActiveTab(tab: 'pending' | 'active' | 'completed'): void {
     this.activeTab = tab;
@@ -865,7 +863,10 @@ export class ProfessionalDashboardComponent implements OnInit {
   acceptBooking(booking: Booking): void {
     this.professionalService.acceptBooking(booking.id).subscribe({
       next: () => {
-        this.loadBookings();
+        // Reload bookings after accepting
+        this.professionalService.getProfessionalBookings().subscribe((bookings) => {
+          this.bookings.set(bookings);
+        });
       },
       error: (error) => {
         console.error('Error accepting booking:', error);
@@ -889,7 +890,10 @@ export class ProfessionalDashboardComponent implements OnInit {
     if (this.selectedBooking && this.rejectionReason.trim()) {
       this.professionalService.rejectBooking(this.selectedBooking.id, this.rejectionReason).subscribe({
         next: () => {
-          this.loadBookings();
+          // Reload bookings after rejecting
+          this.professionalService.getProfessionalBookings().subscribe((bookings) => {
+            this.bookings.set(bookings);
+          });
           this.closeRejectModal();
         },
         error: (error) => {
@@ -913,7 +917,10 @@ export class ProfessionalDashboardComponent implements OnInit {
   completeJob(booking: Booking): void {
     this.professionalService.completeJob(booking.id).subscribe({
       next: () => {
-        this.loadBookings();
+        // Reload bookings after completing job
+        this.professionalService.getProfessionalBookings().subscribe((bookings) => {
+          this.bookings.set(bookings);
+        });
       },
       error: (error) => {
         console.error('Error completing job:', error);
