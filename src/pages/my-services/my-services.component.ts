@@ -93,13 +93,7 @@ import { FormsModule } from '@angular/forms';
                       <div class="detail-row">
                         <span class="detail-label">💰 Precio:</span>
                         <span class="price">
-                          @if (service.priceType === 'fixed') {
-                            ${{ service.price }}
-                          } @else if (service.priceType === 'hourly') {
-                            ${{ service.hourlyRate }}/hora
-                          } @else {
-                            Negociable
-                          }
+                          {{ getFormattedPrice(service) }}
                         </span>
                       </div>
                       <div class="detail-row">
@@ -935,5 +929,15 @@ export class MyServicesComponent implements OnInit {
         console.error('Error updating service status:', error);
       }
     });
+  }
+
+  getFormattedPrice(service: Service): string {
+    if (service.priceType === 'fixed') {
+      return `$${service.price}`;
+    } else if (service.priceType === 'hourly') {
+      return `$${service.hourlyRate}/hora`;
+    } else {
+      return 'Negociable';
+    }
   }
 }
