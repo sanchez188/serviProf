@@ -652,7 +652,7 @@ export class ProfessionalDetailComponent implements OnInit {
           console.error('Service not found');
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading service:', error);
       }
     });
@@ -667,7 +667,7 @@ export class ProfessionalDetailComponent implements OnInit {
           console.error('Service not found');
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading service:', error);
       }
     });
@@ -714,14 +714,14 @@ export class ProfessionalDetailComponent implements OnInit {
       };
 
       this.bookingsService.createBooking(bookingRequest).subscribe({
-        next: () => {
+        next: (booking: any) => {
           this.bookingSuccess = true;
           this.bookingForm.reset();
           setTimeout(() => {
             this.router.navigate(['/my-services']);
           }, 2000);
         },
-        error: (error) => {
+        error: (error: any) => {
           this.bookingError = error.message;
         }
       });
