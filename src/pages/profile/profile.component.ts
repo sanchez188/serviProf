@@ -744,4 +744,9 @@ export class ProfileComponent implements OnInit {
       });
     }
   }
+
+  generateDefaultAvatar(name: string): string {
+    const cleanName = encodeURIComponent(name.trim());
+    return `https://ui-avatars.com/api/?name=${cleanName}&background=3b82f6&color=ffffff&size=120&rounded=true&bold=true`;
+  }
 }
