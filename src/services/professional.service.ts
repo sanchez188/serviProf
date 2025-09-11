@@ -202,6 +202,7 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
+        this.loadProfessionalBookings();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
@@ -248,7 +249,6 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
-        this.loadProfessionalBookings();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
@@ -258,12 +258,6 @@ export class ProfessionalService {
     );
   }
 
-  private loadProfessionalBookings(): void {
-    const currentUser = this.authService.currentUser();
-    if (currentUser && currentUser.userType === UserType.PROFESSIONAL) {
-      this.getProfessionalBookings().subscribe();
-    }
-  }
 
   private mapToBooking(data: any): Booking {
     return {
