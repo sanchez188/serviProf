@@ -249,6 +249,7 @@ export class ProfessionalService {
         return this.mapToBooking(data);
       }),
       tap(() => {
+        this.getProfessionalBookings().subscribe();
         this.isLoadingSignal.set(false);
       }),
       catchError((error) => {
