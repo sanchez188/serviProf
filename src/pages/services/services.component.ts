@@ -142,13 +142,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                     <div class="detail-item">
                       <span class="detail-label">💰 Precio:</span>
                       <span class="price">
-                        @if (service.priceType === PriceType.FIXED) {
-                          ${{ service.price }}
-                        } @else if (service.priceType === PriceType.HOURLY) {
-                          ${{ service.hourlyRate }}/hora
-                        } @else {
-                          Negociable
-                        }
+                        {{ getFormattedPrice(service) }}
                       </span>
                     </div>
                   </div>
@@ -565,5 +559,15 @@ export class ServicesComponent implements OnInit {
   generateDefaultAvatar(name: string): string {
     const cleanName = encodeURIComponent(name.trim());
     return `https://ui-avatars.com/api/?name=${cleanName}&background=3b82f6&color=ffffff&size=24&rounded=true&bold=true`;
+  }
+
+  getFormattedPrice(service: Service): string {
+    if (service.priceType === PriceType.FIXED) {
+      return `$${service.price}`;
+    } else if (service.priceType === PriceType.HOURLY) {
+      return `$${service.hourlyRate}/hora`;
+    } else {
+      return 'Negociable';
+    }
   }
 }
