@@ -31,11 +31,11 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
                 <h1>{{ professional()!.user?.name }}</h1>
                 <div class="category-badge" [style.background-color]="professional()!.category.color">
                   {{ professional()!.category.name }}
+                <div class="category-badge" [style.background-color]="professional()!.category?.color || '#3B82F6'">
+                  {{ professional()!.category?.name || 'Servicio' }}
                 </div>
                 <div class="professional-meta">
-                  @if (professional()!.isVerified) {
-                    <span class="verified-badge">✅ Verificado</span>
-                  }
+                  <span class="verified-badge">✅ Verificado</span>
                   <span class="experience">💼 Profesional verificado</span>
                   <span class="location">📍 {{ professional()!.location }}</span>
                 </div>
