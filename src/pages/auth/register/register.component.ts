@@ -551,7 +551,7 @@ export class RegisterComponent {
       },
       error: (error) => {
         this.errorMessage = error.message;
-      },
+      }
     });
   }
 
@@ -559,5 +559,3 @@ export class RegisterComponent {
     this.router.navigate(['/auth/login']);
   }
 }
-}
-)
