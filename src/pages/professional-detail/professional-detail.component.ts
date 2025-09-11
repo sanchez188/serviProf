@@ -632,13 +632,7 @@ export class ProfessionalDetailComponent implements OnInit {
     this.route.params.subscribe(params => {
       const id = params['id'];
       if (id) {
-        // Detectar si es ruta de professional o service
-        const url = this.router.url;
-        if (url.includes('/service/')) {
-          this.loadService(id);
-        } else {
-          this.loadProfessional(id);
-        }
+        this.loadProfessional(id);
       }
     });
   }
@@ -663,12 +657,7 @@ export class ProfessionalDetailComponent implements OnInit {
       next: (service) => {
         if (service) {
           this.professional.set(service);
-        } else {
-          console.error('Service not found');
         }
-      },
-      error: (error) => {
-        console.error('Error loading service:', error);
       }
     });
   }
