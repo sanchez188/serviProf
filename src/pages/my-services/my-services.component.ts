@@ -1,7 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { BookingsService } from '../../services/bookings.service';
+import { ServicesService } from '../../services/services.service';
 import { Booking, BookingStatus } from '../../models/booking.model';
+import { Service } from '../../models/service.model';
 import { StarRatingComponent } from '../../components/star-rating/star-rating.component';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 import { FormsModule } from '@angular/forms';
@@ -11,6 +14,7 @@ import { FormsModule } from '@angular/forms';
   standalone: true,
   imports: [
     CommonModule,
+    RouterModule,
     FormsModule,
     StarRatingComponent,
     LoadingSpinnerComponent,
@@ -20,7 +24,12 @@ import { FormsModule } from '@angular/forms';
       <div class="container">
         <div class="page-header">
           <h1>Mis Servicios</h1>
-          <p>Gestiona y da seguimiento a tus servicios contratados</p>
+          <p>Gestiona tus servicios ofrecidos y contratados</p>
+          <div class="header-actions">
+            <a routerLink="/create-service" class="btn btn-primary">
+              + Crear Nuevo Servicio
+            </a>
+          </div>
         </div>
 
         @if (bookingsService.isLoading()) {
@@ -29,10 +38,17 @@ import { FormsModule } from '@angular/forms';
           <div class="services-tabs">
             <button 
               class="tab-btn"
+              [class.active]="activeTab === 'offered'"
+              (click)="setActiveTab('offered')"
+            >
+              Servicios Ofrecidos ({{ userServices().length }})
+            </button>
+            <button 
+              class="tab-btn"
               [class.active]="activeTab === 'active'"
               (click)="setActiveTab('active')"
             >
-              Servicios Activos ({{ getActiveBookings().length }})
+              Servicios Contratados ({{ getActiveBookings().length }})
             </button>
             <button 
               class="tab-btn"
@@ -44,6 +60,88 @@ import { FormsModule } from '@angular/forms';
           </div>
 
           <div class="services-content">
+            @if (activeTab === 'offered') {
+              <div class="services-grid">
+                @for (service of userServices(); track service.id) {
+                  <div class="service-card offered">
+                    <div class="service-header">
+                      @if (service.images && service.images.length > 0) {
+                        <img 
+                          [src]="service.images[0]" 
+                          [alt]="service.title"
+                          class="service-image"
+                        >
+                      } @else {
+                        <div class="service-image-placeholder">
+                          <span class="service-icon">🔧</span>
+                        </div>
+                      }
+                      <div class="service-info">
+                        <h3>{{ service.title }}</h3>
+                        <div class="service-category">{{ service.category?.name }}</div>
+                        <div class="service-status" [class]="service.isActive ? 'status-active' : 'status-inactive'">
+                          {{ service.isActive ? 'Activo' : 'Inactivo' }}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="service-details">
+                      <div class="detail-row">
+                        <span class="detail-label">📍 Ubicación:</span>
+                        <span>{{ service.location }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">💰 Precio:</span>
+                        <span class="price">
+                          @if (service.priceType === 'fixed') {
+                            ${{ service.price }}
+                          } @else if (service.priceType === 'hourly') {
+                            ${{ service.hourlyRate }}/hora
+                          } @else {
+                            Negociable
+                          }
+                        </span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">⭐ Calificación:</span>
+                        <span>{{ service.rating }} ({{ service.reviewCount }} reseñas)</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">📋 Órdenes:</span>
+                        <span>{{ service.totalOrders }} completadas</span>
+                      </div>
+                      <div class="service-description">
+                        <strong>Descripción:</strong> {{ service.description }}
+                      </div>
+                    </div>
+
+                    <div class="service-actions">
+                      <a [routerLink]="['/edit-service', service.id]" class="btn btn-outline">
+                        Editar
+                      </a>
+                      <button 
+                        class="btn"
+                        [class]="service.isActive ? 'btn-warning' : 'btn-success'"
+                        (click)="toggleServiceStatus(service)"
+                        [disabled]="servicesService.isLoading()"
+                      >
+                        {{ service.isActive ? 'Desactivar' : 'Activar' }}
+                      </button>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="empty-state">
+                    <div class="empty-icon">🛠️</div>
+                    <h3>No tienes servicios ofrecidos</h3>
+                    <p>Crea tu primer servicio y comienza a recibir clientes.</p>
+                    <a routerLink="/create-service" class="btn btn-primary">
+                      Crear Primer Servicio
+                    </a>
+                  </div>
+                }
+              </div>
+            }
+
             @if (activeTab === 'active') {
               <div class="services-grid">
                 @for (booking of getActiveBookings(); track booking.id) {
@@ -272,6 +370,10 @@ import { FormsModule } from '@angular/forms';
       color: #6b7280;
     }
 
+    .header-actions {
+      margin-top: 1.5rem;
+    }
+
     .services-tabs {
       display: flex;
       gap: 1rem;
@@ -322,6 +424,10 @@ import { FormsModule } from '@angular/forms';
       border-left: 4px solid #10b981;
     }
 
+    .service-card.offered {
+      border-left: 4px solid #8b5cf6;
+    }
+
     .service-header {
       display: flex;
       gap: 1rem;
@@ -333,6 +439,27 @@ import { FormsModule } from '@angular/forms';
       height: 60px;
       border-radius: 50%;
       object-fit: cover;
+    }
+
+    .service-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 0.5rem;
+      object-fit: cover;
+    }
+
+    .service-image-placeholder {
+      width: 60px;
+      height: 60px;
+      background: #f3f4f6;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .service-icon {
+      font-size: 1.5rem;
     }
 
     .professional-avatar-small {
@@ -375,6 +502,16 @@ import { FormsModule } from '@angular/forms';
     .status-in_progress {
       background: #fde68a;
       color: #92400e;
+    }
+
+    .status-active {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .status-inactive {
+      background: #fee2e2;
+      color: #dc2626;
     }
 
     .completion-date {
@@ -462,6 +599,15 @@ import { FormsModule } from '@angular/forms';
     .btn-outline:hover {
       background: #3b82f6;
       color: white;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .btn-warning:hover:not(:disabled) {
+      background: #d97706;
     }
 
     .btn-secondary {
@@ -661,9 +807,11 @@ import { FormsModule } from '@angular/forms';
 })
 export class MyServicesComponent implements OnInit {
   bookingsService = inject(BookingsService);
+  servicesService = inject(ServicesService);
 
-  activeTab: "active" | "completed" = "active";
+  activeTab: "offered" | "active" | "completed" = "offered";
   bookings = signal<Booking[]>([]);
+  userServices = this.servicesService.userServices;
 
   // Review modal
   showReviewModal = false;
@@ -676,6 +824,7 @@ export class MyServicesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadBookings();
+    this.loadUserServices();
   }
 
   loadBookings(): void {
@@ -684,7 +833,11 @@ export class MyServicesComponent implements OnInit {
     });
   }
 
-  setActiveTab(tab: "active" | "completed"): void {
+  loadUserServices(): void {
+    this.servicesService.getUserServices().subscribe();
+  }
+
+  setActiveTab(tab: "offered" | "active" | "completed"): void {
     this.activeTab = tab;
   }
 
@@ -770,5 +923,17 @@ export class MyServicesComponent implements OnInit {
           },
         });
     }
+  }
+
+  toggleServiceStatus(service: Service): void {
+    const newStatus = !service.isActive;
+    this.servicesService.updateService(service.id, { isActive: newStatus }).subscribe({
+      next: () => {
+        this.loadUserServices();
+      },
+      error: (error) => {
+        console.error('Error updating service status:', error);
+      }
+    });
   }
 }

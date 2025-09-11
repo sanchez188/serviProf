@@ -25,22 +25,18 @@ import { isSupabaseConfigured } from '../../lib/supabase';
         </div>
 
         <nav class="nav-menu" [class.active]="isMenuOpen">
-          @if (!authService.isAuthenticated() || authService.currentUser()?.userType === UserType.CLIENT) {
+          <a routerLink="/services" routerLinkActive="active" class="nav-link">
+            Servicios
+          </a>
+          @if (!authService.isAuthenticated()) {
             <a routerLink="/professionals" routerLinkActive="active" class="nav-link">
               Profesionales
             </a>
           }
           @if (authService.isAuthenticated()) {
-            @if (authService.currentUser()?.userType === UserType.CLIENT) {
-              <a routerLink="/my-services" routerLinkActive="active" class="nav-link">
-                Mis Servicios
-              </a>
-            }
-            @if (authService.currentUser()?.userType === UserType.PROFESSIONAL) {
-              <a routerLink="/professional-dashboard" routerLinkActive="active" class="nav-link">
-                Panel Profesional
-              </a>
-            }
+            <a routerLink="/my-services" routerLinkActive="active" class="nav-link">
+              Mis Servicios
+            </a>
             <div class="user-menu">
               <button class="user-button" (click)="toggleUserMenu()">
                 <img 
@@ -55,11 +51,6 @@ import { isSupabaseConfigured } from '../../lib/supabase';
                 <a routerLink="/profile" class="dropdown-item" (click)="closeUserMenu()">
                   Mi Perfil
                 </a>
-                @if (authService.currentUser()?.userType === UserType.PROFESSIONAL && !authService.currentUser()?.professionalProfile) {
-                  <a routerLink="/professional-setup" class="dropdown-item" (click)="closeUserMenu()">
-                    Configurar Perfil Profesional
-                  </a>
-                }
                 <button class="dropdown-item" (click)="logout()">
                   Cerrar Sesión
                 </button>

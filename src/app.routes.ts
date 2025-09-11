@@ -29,6 +29,24 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
+    path: 'create-service',
+    loadComponent: () => import('./pages/create-service/create-service.component').then(m => m.CreateServiceComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'edit-service/:id',
+    loadComponent: () => import('./pages/edit-service/edit-service.component').then(m => m.EditServiceComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'services',
+    loadComponent: () => import('./pages/services/services.component').then(m => m.ServicesComponent)
+  },
+  {
+    path: 'service/:id',
+    loadComponent: () => import('./pages/service-detail/service-detail.component').then(m => m.ServiceDetailComponent)
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard]
