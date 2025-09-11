@@ -46,10 +46,6 @@
               "buildTarget": "demo:build:development"
             },
             "production": {
-              "buildTarget": "demo:build:production",
-              "serviceWorker": true
-            },
-            "production": {
               "buildTarget": "demo:build:production"
             }
           },
