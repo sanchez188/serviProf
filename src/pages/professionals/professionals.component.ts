@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProfessionalsService } from '../../services/professionals.service';
-import { Professional, ServiceCategory } from '../../models/professional.model';
+import { ServiceCategory } from '../../models/professional.model';
+import { Service } from '../../models/service.model';
 import { StarRatingComponent } from '../../components/star-rating/star-rating.component';
 import { LoadingSpinnerComponent } from '../../components/loading-spinner/loading-spinner.component';
 
@@ -22,8 +23,8 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       <div class="container">
         <!-- Header -->
         <div class="page-header">
-          <h1>Encuentra tu Profesional Ideal</h1>
-          <p>Explora nuestra red de profesionales verificados</p>
+          <h1>Encuentra el Servicio Ideal</h1>
+          <p>Explora nuestra red de servicios profesionales</p>
         </div>
 
         <!-- Filters -->
@@ -31,7 +32,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
           <div class="search-bar">
             <input
               type="text"
-              placeholder="Buscar por nombre, servicio o habilidad..."
+              placeholder="Buscar por título, descripción o ubicación..."
               [(ngModel)]="searchQuery"
               (input)="onSearch()"
               class="search-input"
@@ -73,77 +74,90 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
         <!-- Results -->
         @if (!professionalsService.isLoading()) {
           <div class="results-header">
-            <h2>{{ filteredProfessionals().length }} profesionales encontrados</h2>
+            <h2>{{ filteredProfessionals().length }} servicios encontrados</h2>
           </div>
 
-          <div class="professionals-grid">
-            @for (professional of filteredProfessionals(); track professional.id) {
-              <div class="professional-card">
+          <div class="services-grid">
+            @for (service of filteredProfessionals(); track service.id) {
+              <div class="service-card">
                 <div class="card-header">
-                  <img 
-                    [src]="professional.avatar" 
-                    [alt]="professional.name"
-                    class="professional-avatar"
-                  >
-                  <div class="professional-info">
-                    <h3>{{ professional.name }}</h3>
-                    <div class="category-badge" [style.background-color]="professional.category.color">
-                      {{ professional.category.name }}
+                  @if (service.images && service.images.length > 0) {
+                    <img 
+                      [src]="service.images[0]" 
+                      [alt]="service.title"
+                      class="service-image"
+                    >
+                  } @else {
+                    <div class="service-image-placeholder">
+                      <span class="service-icon">🔧</span>
                     </div>
-                    @if (professional.isVerified) {
-                      <div class="verified-badge">✅ Verificado</div>
-                    }
+                  }
+                  <div class="service-info">
+                    <h3>{{ service.title }}</h3>
+                    <div class="category-badge" [style.background-color]="service.category?.color">
+                      {{ service.category?.name }}
+                    </div>
+                    <div class="service-provider">
+                      <img 
+                        [src]="service.user?.avatar || generateDefaultAvatar(service.user?.name || 'Usuario')" 
+                        [alt]="service.user?.name"
+                        class="provider-avatar"
+                      >
+                      <span>{{ service.user?.name }}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div class="card-body">
                   <div class="rating-section">
                     <app-star-rating 
-                      [rating]="professional.rating" 
-                      [count]="professional.reviewCount"
+                      [rating]="service.rating" 
+                      [count]="service.reviewCount"
                     ></app-star-rating>
                   </div>
 
-                  <p class="description">{{ professional.description }}</p>
+                  <p class="description">{{ service.description }}</p>
 
-                  <div class="skills">
-                    @for (skill of professional.skills.slice(0, 3); track skill) {
-                      <span class="skill-tag">{{ skill }}</span>
-                    }
-                    @if (professional.skills.length > 3) {
-                      <span class="skill-tag more">+{{ professional.skills.length - 3 }} más</span>
-                    }
-                  </div>
+                  @if (service.tags && service.tags.length > 0) {
+                    <div class="tags">
+                      @for (tag of service.tags.slice(0, 3); track tag) {
+                        <span class="tag">{{ tag }}</span>
+                      }
+                      @if (service.tags.length > 3) {
+                        <span class="tag more">+{{ service.tags.length - 3 }} más</span>
+                      }
+                    </div>
+                  }
 
-                  <div class="professional-details">
+                  <div class="service-details">
                     <div class="detail-item">
                       <span class="detail-label">📍 Ubicación:</span>
-                      <span>{{ professional.location }}</span>
+                      <span>{{ service.location }}</span>
                     </div>
                     <div class="detail-item">
-                      <span class="detail-label">💼 Experiencia:</span>
-                      <span>{{ professional.experience }} años</span>
+                      <span class="detail-label">📋 Órdenes:</span>
+                      <span>{{ service.totalOrders }} completadas</span>
                     </div>
                     <div class="detail-item">
-                      <span class="detail-label">💰 Tarifa:</span>
-                      <span class="price">\${{ professional.hourlyRate }}/hora</span>
-                    </div>
+                      <span class="detail-label">💰 Precio:</span>
+                      <span class="price">{{ getFormattedPrice(service) }}</span>
+                    }
                   </div>
                 </div>
 
                 <div class="card-footer">
                   <a 
-                    [routerLink]="['/professional', professional.id]"
+                    [routerLink]="['/service', service.id]"
                     class="btn btn-primary"
                   >
-                    Ver Perfil
+                    Ver Detalles
                   </a>
                 </div>
               </div>
             } @empty {
               <div class="empty-state">
                 <div class="empty-icon">🔍</div>
-                <h3>No se encontraron profesionales</h3>
+                <h3>No se encontraron servicios</h3>
                 <p>Intenta ajustar tus filtros de búsqueda</p>
               </div>
             }
@@ -154,7 +168,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
   `,
   styles: [
     `
-    .professionals-page {
+    .services-page {
       min-height: 100vh;
       background: #f9fafb;
       padding: 2rem 0;
@@ -269,13 +283,13 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       color: #1f2937;
     }
 
-    .professionals-grid {
+    .services-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
       gap: 2rem;
     }
 
-    .professional-card {
+    .service-card {
       background: white;
       border-radius: 1rem;
       overflow: hidden;
@@ -283,7 +297,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       transition: all 0.3s ease;
     }
 
-    .professional-card:hover {
+    .service-card:hover {
       transform: translateY(-5px);
       box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     }
@@ -295,18 +309,32 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       border-bottom: 1px solid #f3f4f6;
     }
 
-    .professional-avatar {
+    .service-image {
       width: 80px;
       height: 80px;
-      border-radius: 50%;
+      border-radius: 0.5rem;
       object-fit: cover;
     }
 
-    .professional-info {
+    .service-image-placeholder {
+      width: 80px;
+      height: 80px;
+      background: #f3f4f6;
+      border-radius: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .service-icon {
+      font-size: 2rem;
+    }
+
+    .service-info {
       flex: 1;
     }
 
-    .professional-info h3 {
+    .service-info h3 {
       font-size: 1.25rem;
       font-weight: bold;
       color: #1f2937;
@@ -323,10 +351,22 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       margin-bottom: 0.5rem;
     }
 
-    .verified-badge {
+    .service-provider {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .provider-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .service-provider span {
       font-size: 0.875rem;
-      color: #059669;
-      font-weight: 500;
+      color: #6b7280;
     }
 
     .card-body {
@@ -343,14 +383,14 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       margin-bottom: 1rem;
     }
 
-    .skills {
+    .tags {
       display: flex;
       flex-wrap: wrap;
       gap: 0.5rem;
       margin-bottom: 1.5rem;
     }
 
-    .skill-tag {
+    .tag {
       padding: 0.25rem 0.75rem;
       background: #f3f4f6;
       border-radius: 1rem;
@@ -358,12 +398,12 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
       color: #374151;
     }
 
-    .skill-tag.more {
+    .tag.more {
       background: #e5e7eb;
       font-weight: 500;
     }
 
-    .professional-details {
+    .service-details {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
@@ -442,7 +482,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
     .icon-palette::before { content: '🎨'; }
 
     @media (max-width: 768px) {
-      .professionals-grid {
+      .services-grid {
         grid-template-columns: 1fr;
       }
 
@@ -462,7 +502,7 @@ export class ProfessionalsComponent implements OnInit {
   private route = inject(ActivatedRoute);
 
   categories: ServiceCategory[] = [];
-  filteredProfessionals = signal<Professional[]>([]);
+  filteredProfessionals = signal<Service[]>([]);
   selectedCategory = '';
   searchQuery = '';
 
@@ -478,14 +518,14 @@ export class ProfessionalsComponent implements OnInit {
         this.selectedCategory = params['category'];
         this.filterByCategory(this.selectedCategory);
       } else {
-        this.loadProfessionals();
+        this.loadServices();
       }
     });
   }
 
-  loadProfessionals(): void {
-    this.professionalsService.getProfessionals().subscribe((professionals) => {
-      this.filteredProfessionals.set(professionals);
+  loadServices(): void {
+    this.professionalsService.getProfessionals().subscribe((services) => {
+      this.filteredProfessionals.set(services);
     });
   }
 
@@ -496,11 +536,11 @@ export class ProfessionalsComponent implements OnInit {
     if (categoryId) {
       this.professionalsService
         .getProfessionals(categoryId)
-        .subscribe((professionals) => {
-          this.filteredProfessionals.set(professionals);
+        .subscribe((services) => {
+          this.filteredProfessionals.set(services);
         });
     } else {
-      this.loadProfessionals();
+      this.loadServices();
     }
   }
 
@@ -509,11 +549,26 @@ export class ProfessionalsComponent implements OnInit {
       this.selectedCategory = '';
       this.professionalsService
         .searchProfessionals(this.searchQuery)
-        .subscribe((professionals) => {
-          this.filteredProfessionals.set(professionals);
+        .subscribe((services) => {
+          this.filteredProfessionals.set(services);
         });
     } else {
-      this.loadProfessionals();
+      this.loadServices();
+    }
+  }
+
+  generateDefaultAvatar(name: string): string {
+    const cleanName = encodeURIComponent(name.trim());
+    return `https://ui-avatars.com/api/?name=${cleanName}&background=3b82f6&color=ffffff&size=24&rounded=true&bold=true`;
+  }
+
+  getFormattedPrice(service: Service): string {
+    if (service.priceType === 'fixed') {
+      return `$${service.price}`;
+    } else if (service.priceType === 'hourly') {
+      return `$${service.hourlyRate}/hora`;
+    } else {
+      return 'Negociable';
     }
   }
 }

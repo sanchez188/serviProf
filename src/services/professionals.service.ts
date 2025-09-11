@@ -2,13 +2,14 @@ import { Injectable, signal } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { supabase } from '../lib/supabase';
-import { Professional, ServiceCategory } from '../models/professional.model';
+import { ServiceCategory } from '../models/professional.model';
+import { Service } from '../models/service.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfessionalsService {
-  private professionalsSignal = signal<Professional[]>([]);
+  private professionalsSignal = signal<Service[]>([]);
   private categoriesSignal = signal<ServiceCategory[]>([]);
   private isLoadingSignal = signal(false);
 
@@ -36,26 +37,27 @@ export class ProfessionalsService {
     });
   }
 
-  getProfessionals(categoryId?: string): Observable<Professional[]> {
+  getProfessionals(categoryId?: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
     
     let query = supabase
-      .from('professionals')
+      .from('services')
       .select(`
         *,
-        profiles!inner (
+        user:profiles!services_user_id_fkey (
           id,
           name,
           email,
           avatar
         ),
-        categories (
+        category:categories!services_category_id_fkey (
           id,
           name,
           icon,
           color
         )
-      `);
+      `)
+      .eq('is_active', true);
 
     if (categoryId) {
       query = query.eq('category_id', categoryId);
@@ -67,7 +69,7 @@ export class ProfessionalsService {
           throw error;
         }
         
-        return (data || []).map(prof => this.mapToProfessional(prof));
+        return (data || []).map(service => this.mapToService(service));
       }),
       tap((professionals) => {
         this.professionalsSignal.set(professionals);
@@ -75,44 +77,44 @@ export class ProfessionalsService {
       }),
       catchError((error) => {
         this.isLoadingSignal.set(false);
-        return throwError(() => new Error(error.message || 'Error loading professionals'));
+        return throwError(() => new Error(error.message || 'Error loading services'));
       })
     );
   }
 
-  getProfessionalById(id: string): Observable<Professional | undefined> {
+  getProfessionalById(id: string): Observable<Service | undefined> {
     this.isLoadingSignal.set(true);
     
     return from(
       supabase
-        .from('professionals')
+        .from('services')
         .select(`
           *,
-          profiles!inner (
+          user:profiles!services_user_id_fkey (
             id,
             name,
             email,
             avatar
           ),
-          categories (
+          category:categories!services_category_id_fkey (
             id,
             name,
             icon,
             color
           ),
-          reviews (
+          reviews!reviews_service_id_fkey (
             id,
             rating,
             comment,
-            service_type,
             created_at,
-            profiles!reviews_user_id_fkey (
+            user:profiles!reviews_user_id_fkey (
               name,
               avatar
             )
           )
         `)
         .eq('id', id)
+        .eq('is_active', true)
         .single()
     ).pipe(
       map(({ data, error }) => {
@@ -123,12 +125,12 @@ export class ProfessionalsService {
           throw error;
         }
         
-        return data ? this.mapToProfessional(data) : undefined;
+        return data ? this.mapToService(data) : undefined;
       }),
       tap(() => this.isLoadingSignal.set(false)),
       catchError((error) => {
         this.isLoadingSignal.set(false);
-        return throwError(() => new Error(error.message || 'Error loading professional'));
+        return throwError(() => new Error(error.message || 'Error loading service'));
       })
     );
   }
@@ -155,35 +157,36 @@ export class ProfessionalsService {
     );
   }
 
-  searchProfessionals(query: string): Observable<Professional[]> {
+  searchProfessionals(query: string): Observable<Service[]> {
     this.isLoadingSignal.set(true);
     
     return from(
       supabase
-        .from('professionals')
+        .from('services')
         .select(`
           *,
-          profiles!inner (
+          user:profiles!services_user_id_fkey (
             id,
             name,
             email,
             avatar
           ),
-          categories (
+          category:categories!services_category_id_fkey (
             id,
             name,
             icon,
             color
           )
         `)
-        .or(`profiles.name.ilike.%${query}%,description.ilike.%${query}%,categories.name.ilike.%${query}%`)
+        .eq('is_active', true)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%`)
     ).pipe(
       map(({ data, error }) => {
         if (error) {
           throw error;
         }
         
-        return (data || []).map(prof => this.mapToProfessional(prof));
+        return (data || []).map(service => this.mapToService(service));
       }),
       tap((professionals) => {
         this.professionalsSignal.set(professionals);
@@ -191,41 +194,61 @@ export class ProfessionalsService {
       }),
       catchError((error) => {
         this.isLoadingSignal.set(false);
-        return throwError(() => new Error(error.message || 'Error searching professionals'));
+        return throwError(() => new Error(error.message || 'Error searching services'));
       })
     );
   }
 
-  private mapToProfessional(data: any): Professional {
-    return {
+  private mapToService(data: any): Service {
+    const service: Service = {
       id: data.id,
-      name: data.profiles?.name || 'Professional',
-      category: {
-        id: data.categories?.id || '',
-        name: data.categories?.name || 'General',
-        icon: data.categories?.icon || 'wrench',
-        color: data.categories?.color || '#3B82F6'
-      },
-      avatar: data.profiles?.avatar || 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+      userId: data.user_id,
+      categoryId: data.category_id,
+      title: data.title,
+      description: data.description,
+      priceType: data.price_type,
+      price: data.price,
+      hourlyRate: data.hourly_rate,
+      location: data.location,
+      isActive: data.is_active,
+      images: data.images || [],
+      tags: data.tags || [],
+      availabilitySchedule: data.availability_schedule || {},
       rating: data.rating || 0,
       reviewCount: data.review_count || 0,
-      hourlyRate: data.hourly_rate,
-      description: data.description || '',
-      skills: data.skills || [],
-      availability: [], // This would need to be implemented based on your availability structure
-      location: data.location || '',
-      experience: data.experience || 0,
-      reviews: (data.reviews || []).map((review: any) => ({
+      totalOrders: data.total_orders || 0,
+      createdAt: new Date(data.created_at),
+      updatedAt: new Date(data.updated_at),
+      user: data.user ? {
+        id: data.user.id,
+        name: data.user.name,
+        avatar: data.user.avatar || 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&dpr=1',
+        email: data.user.email
+      } : undefined,
+      category: data.category ? {
+        id: data.category.id,
+        name: data.category.name,
+        icon: data.category.icon || 'wrench',
+        color: data.category.color || '#3B82F6'
+      } : undefined
+    };
+
+    if (data.reviews) {
+      service.reviews = data.reviews.map((review: any) => ({
         id: review.id,
         userId: review.user_id,
-        userName: review.profiles?.name || 'Usuario',
-        userAvatar: review.profiles?.avatar,
+        serviceId: review.service_id,
+        bookingId: review.booking_id,
         rating: review.rating,
         comment: review.comment,
         date: new Date(review.created_at),
-        serviceType: review.service_type || 'Servicio'
-      })),
-      isVerified: data.is_verified || false
-    };
+        user: {
+          name: review.user?.name || 'Usuario',
+          avatar: review.user?.avatar || ''
+        }
+      }));
+    }
+
+    return service;
   }
 }
