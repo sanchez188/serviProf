@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { Observable, from, throwError } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { supabase } from '../lib/supabase';
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
 import { 
   ProfessionalAvailability, 
   BlockedTimeSlot, 
@@ -41,11 +42,12 @@ export class AvailabilityService {
         .eq('user_id', targetUserId)
         .order('day_of_week', { ascending: true })
     ).pipe(
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any[]>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
-        return (data || []).map(item => this.mapToAvailability(item));
+        return (data || []).map((item: any) => this.mapToAvailability(item));
       }),
       tap((availability) => {
         if (!userId) { // Solo actualizar signal si es para el usuario actual
@@ -76,7 +78,8 @@ export class AvailabilityService {
         .delete()
         .eq('user_id', currentUser.id)
     ).pipe(
-      map(({ error }) => {
+      map((response: PostgrestSingleResponse<any>) => {
+        const { error } = response;
         if (error) throw error;
         return true;
       }),
@@ -97,11 +100,12 @@ export class AvailabilityService {
             .select('*')
         );
       }),
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any[]>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
-        return (data || []).map(item => this.mapToAvailability(item));
+        return (data || []).map((item: any) => this.mapToAvailability(item));
       }),
       tap((availability) => {
         this.availabilitySignal.set(availability);
@@ -126,7 +130,8 @@ export class AvailabilityService {
         slot_duration_hours: duration
       })
     ).pipe(
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any[]>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
@@ -161,7 +166,8 @@ export class AvailabilityService {
         booking_end_time: endTime
       })
     ).pipe(
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
@@ -189,11 +195,12 @@ export class AvailabilityService {
         .eq('user_id', currentUser.id)
         .order('date', { ascending: true })
     ).pipe(
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any[]>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
-        return (data || []).map(item => this.mapToBlockedSlot(item));
+        return (data || []).map((item: any) => this.mapToBlockedSlot(item));
       }),
       tap((slots) => {
         this.blockedSlotsSignal.set(slots);
@@ -230,7 +237,8 @@ export class AvailabilityService {
         .select('*')
         .single()
     ).pipe(
-      map(({ data, error }) => {
+      map((response: PostgrestSingleResponse<any>) => {
+        const { data, error } = response;
         if (error) {
           throw error;
         }
@@ -258,7 +266,8 @@ export class AvailabilityService {
         .eq('id', slotId)
         .neq('reason', 'booking') // No permitir desbloquear slots de reservas
     ).pipe(
-      map(({ error }) => {
+      map((response: PostgrestSingleResponse<any>) => {
+        const { error } = response;
         if (error) {
           throw error;
         }
