@@ -47,7 +47,7 @@ import { LoadingSpinnerComponent } from '../../components/loading-spinner/loadin
             </div>
             <div class="price-section">
               <div class="price">
-                <span class="price-amount">\${{ professional()!.hourly_rate || professional()!.price }}</span>
+                <span class="price-amount">\${{ professional()!.hourlyRate || professional()!.price }}</span>
                 <span class="price-unit">/hora</span>
               </div>
             </div>
